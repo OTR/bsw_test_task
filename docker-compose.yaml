@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: bet_maker_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  line_provider:
+    build: ./line_provider
+    container_name: line_provider_container
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+
+  bet_maker:
+    build: ./bet_maker
+    container_name: bet_maker_container
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      line_provider:
+        condition: service_started
+    env_file:
+      - .env
+    ports:
+      - "8081:8081"
+
+volumes:
+  postgres_data:

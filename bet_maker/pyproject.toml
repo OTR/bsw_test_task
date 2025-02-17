@@ -4,9 +4,19 @@ version = "0.1.0"
 description = ""
 authors = ["OTR <49165533+OTR@users.noreply.github.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
+fastapi = "^0.115.8"
+alembic = "^1.14.1"
+pydantic-settings = "^2.7.1"
+asyncpg = "^0.30.0"
+uvicorn = "^0.34.0"
+httpx = "^0.28.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
 
 
 [build-system]
