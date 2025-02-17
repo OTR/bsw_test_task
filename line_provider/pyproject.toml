@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "bsw"
+name = "line-provider"
 version = "0.1.0"
 description = ""
 authors = ["OTR <49165533+OTR@users.noreply.github.com>"]
@@ -7,23 +7,14 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.115.8"
-alembic = "^1.14.1"
-pydantic-settings = "^2.7.1"
-asyncpg = "^0.30.0"
+fastapi = {extras = ["standard"], version = "^0.115.8"}
 uvicorn = "^0.34.0"
-httpx = "^0.28.1"
-aiosqlite = "^0.21.0"
-pytest-asyncio = "^0.25.3"
-sqlalchemy = "^2.0.38"
+pydantic-settings = "^2.8.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
+pytest-asyncio = "^0.25.3"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-asyncio_mode = "strict"
-asyncio_default_fixture_loop_scope = "function"

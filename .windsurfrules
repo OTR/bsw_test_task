@@ -1,0 +1,10 @@
+1. Follow Clean Architecture principles
+2. Follow Domain Driven Design principles
+3. Follow best practices for FastAPI application
+4. Use `pytest` as testing framework
+5. Use `poetry run python main.py` to run python files
+6. Use `poetry run pytest` to run test cases
+7. When running `poetry run` make sure to change directory to `bet_maker` before running any commands
+8. Run scripts in PowerShell
+9. Project uses `pydantic` version 2
+10. Project requirements are located in `README.md` file from project root

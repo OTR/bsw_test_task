@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+<title>{% block title %}{% endblock %}</title>
+<meta charset="utf-8">
+<link rel="site icon" type="image/png"
+      href="{% static 'app/favicon.ico' %}"/>
+<link rel="stylesheet" type="text/css"
+      href="{% static 'app/css/bootstrap.min.css' %}">
+<script type="text/javascript"
+        src="{% static 'app/js/jquery-3.4.1.slim.min.js' %}"></script>
+<script type="text/javascript"
+        src="{% static 'app/js/popper.min.js' %}"></script>
+<script type="text/javascript"
+        src="{% static 'app/js/bootstrap.min.js' %}"></script>
+<script type="text/javascript"
+        src="{% static 'app/js/user-script.js' %}"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="/">Home</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse"
+          data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+       <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          List Targets
+        </a>
+        <div class="dropdown-menu" aria-labelledby="statusDropdown">
+          <a class="dropdown-item" href="/list?status=all">All</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/list?status=in_progress">In Progress</a>
+          <a class="dropdown-item" href="/list?status=to_do">To Do</a>
+          <a class="dropdown-item" href="/list?status=done">Done</a>
+          <a class="dropdown-item" href="/list?status=rejected">Rejected</a>
+          <a class="dropdown-item" href="/list?status=not_labeled">Not Labeled</a>
+        </div>
+      </li>
+      <!-- Get new YouTube videos with duration -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="durationDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          New videos
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="/new?duration=any">New with any duration</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/new?duration=short">New with duration < 4 min</a>
+          <a class="dropdown-item" href="/new?duration=medium">New with duration [4, 20] min</a>
+          <a class="dropdown-item" href="/new?duration=long">New with duration > 20 min</a>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/alert">Alert Me</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/admin">Admin Panel</a>
+      </li>
+
+    </ul>
+  </div>
+</nav>
+
+<!-- Notification container -->
+<div id="notificationContainer" class="position-fixed top-500 start-50 translate-middle-x p-3" style="z-index: 1050;">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% block content %}
+{% endblock %}
+</body>
+</html>
