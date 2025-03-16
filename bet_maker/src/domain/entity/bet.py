@@ -1,6 +1,6 @@
 from decimal import Decimal
 from datetime import datetime
-from typing import  Union, Any
+from typing import Union, Any
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
@@ -9,20 +9,17 @@ from src.domain.vo import BetStatus
 
 class Bet(BaseModel):
     """
-    Domain entity representing a bet placed by a user.
-    
-    This entity encapsulates all the information related to a bet including its
-    amount, associated event, status, and creation timestamp.
+    Доменная сущность ставки пользователя.
     
     Attributes:
-        bet_id: Unique identifier of the bet
-        event_id: ID of the event this bet is placed on
-        amount: The monetary amount of the bet
-        status: Current status of the bet (pending, won, lost)
-        created_at: Timestamp when the bet was created
+        bet_id: Уникальный идентификатор ставки
+        event_id: ID события, на которое сделана ставка
+        amount: Сумма ставки
+        status: Текущий статус ставки (в ожидании, выиграна, проиграна)
+        created_at: Время создания ставки
     """
     model_config = ConfigDict(
-        frozen=True,  # Make the entity immutable
+        frozen=True,
         json_schema_extra={"example": {
             "bet_id": 123,
             "event_id": 456,
@@ -32,55 +29,53 @@ class Bet(BaseModel):
         }}
     )
     
-    bet_id: Union[int, str] = Field(..., description="Unique identifier of the bet")
-    event_id: Union[int, str] = Field(..., description="ID of the event this bet is placed on")
-    amount: Decimal = Field(..., description="Monetary amount of the bet")
-    status: BetStatus = Field(default=BetStatus.PENDING, description="Current status of the bet")
+    bet_id: Union[int, str] = Field(..., description="Уникальный идентификатор ставки")
+    event_id: Union[int, str] = Field(..., description="ID события, на которое сделана ставка")
+    amount: Decimal = Field(..., description="Сумма ставки")
+    status: BetStatus = Field(default=BetStatus.PENDING, description="Текущий статус ставки")
     created_at: datetime = Field(
         default_factory=datetime.now, 
-        description="Timestamp when the bet was created"
+        description="Время создания ставки"
     )
 
     @field_validator('amount')
     def validate_amount(cls, value: Decimal) -> Decimal:
         """
-        Validates that the bet amount is a positive number with exactly 2 decimal places.
+        Проверяет сумму ставки на положительность и наличие ровно 2 знаков после запятой.
         
         Args:
-            value: The bet amount to validate
+            value: Сумма ставки для проверки
             
         Returns:
-            The validated bet amount
+            Проверенная сумма ставки
             
         Raises:
-            ValueError: If amount is not positive or doesn't have exactly 2 decimal places
+            ValueError: Если сумма не положительная или имеет не ровно 2 знака после запятой
         """
-        # Check if amount is positive
         if value <= Decimal('0'):
-            raise ValueError("Bet amount must be a positive number")
+            raise ValueError("Сумма ставки должна быть положительной")
             
-        # Check if amount has exactly 2 decimal places
         decimal_str = str(value)
         if '.' in decimal_str:
             _, decimals = decimal_str.split('.')
             if len(decimals) != 2:
-                raise ValueError("Bet amount must have exactly 2 decimal places")
+                raise ValueError("Сумма ставки должна иметь ровно 2 знака после запятой")
                 
         return value
 
     @field_validator('status')
     def validate_status(cls, value: Any) -> BetStatus:
         """
-        Validates and converts the status to a BetStatus enum.
+        Проверяет и преобразует статус в перечисление BetStatus.
         
         Args:
-            value: The status value to validate (string or BetStatus)
+            value: Значение статуса (строка или BetStatus)
             
         Returns:
-            The validated BetStatus enum value
+            Проверенное значение перечисления BetStatus
             
         Raises:
-            ValueError: If the status is not valid
+            ValueError: Если статус недействителен
         """
         if isinstance(value, BetStatus):
             return value
@@ -88,137 +83,125 @@ class Bet(BaseModel):
         try:
             return BetStatus(value)
         except ValueError:
-            raise ValueError(f"Invalid bet status: {value}")
+            raise ValueError(f"Недействительный статус ставки: {value}")
 
     @property
     def is_settled(self) -> bool:
         """
-        Determines if the bet has been settled (won or lost).
+        Определяет, разрешена ли ставка (выиграна или проиграна).
         
         Returns:
-            True if the bet is settled, False if it's still pending
+            True если ставка разрешена, False если еще в ожидании
         """
         return self.status != BetStatus.PENDING
     
     @property
     def is_winning(self) -> bool:
         """
-        Determines if this is a winning bet.
+        Определяет, является ли ставка выигрышной.
         
         Returns:
-            True if the bet has won, False otherwise
+            True если ставка выиграла, False в противном случае
         """
         return self.status == BetStatus.WON
     
     @property
     def formatted_amount(self) -> str:
         """
-        Returns the bet amount formatted as a string with currency symbol.
+        Возвращает сумму ставки в форматированном виде с символом валюты.
         
         Returns:
-            A formatted string representation of the bet amount
+            Форматированная строка с суммой ставки
         """
         return f"${self.amount}"
     
     def update_status_from_event_state(self, event_state: str) -> 'Bet':
         """
-        Creates a new Bet instance with updated status based on event state.
-        Since Bet is immutable, this method returns a new instance.
-        
+        Создает новый экземпляр Bet с обновленным статусом на основе состояния события.
+
         Args:
-            event_state: The state of the event from line_provider service
-            
+            event_state: Состояние события от сервиса line_provider
+
         Returns:
-            A new Bet instance with the updated status
+            Новый экземпляр Bet с обновленным статусом
         """
         new_status = BetStatus.from_event_state(event_state)
         return self.model_copy(update={"status": new_status})
-    
+
     def model_dump_json(self, **kwargs) -> str:
         """
-        Custom JSON serialization method to properly handle Decimal and enum types.
-        
+        Кастомный метод сериализации в JSON для корректной обработки Decimal и перечислений.
+
         Returns:
-            JSON string representation of the model
+            JSON-строка модели
         """
-        # First convert the model to a dict
         data = self.model_dump()
-        
-        # Manually convert Decimal and Enum values to strings
+
         for key, value in data.items():
             if isinstance(value, Decimal):
                 data[key] = str(value)
             elif isinstance(value, BetStatus):
                 data[key] = str(value)
-        
-        # Use the standard model_dump_json with the preprocessed data
+
         from json import dumps
         return dumps(data, default=str)
 
 
 class BetRequest(BaseModel):
     """
-    Data Transfer Object (DTO) for creating a new bet.
-    
-    This class represents the incoming data structure for bet creation requests.
-    It contains only the essential fields needed to create a bet.
-    
+    DTO для создания новой ставки.
+
     Attributes:
-        event_id: ID of the event to bet on
-        amount: The monetary amount of the bet
+        event_id: ID события для ставки
+        amount: Сумма ставки
     """
     model_config = ConfigDict(
         frozen=True,
-        extra="forbid"  # Prevent extra fields
+        extra="forbid"
     )
-    
-    event_id: int = Field(..., description="ID of the event to bet on")
-    amount: Decimal = Field(..., description="Monetary amount to bet")
-    
+
+    event_id: int = Field(..., description="ID события для ставки")
+    amount: Decimal = Field(..., description="Сумма ставки")
+
     @field_validator('amount')
     def validate_amount(cls, value: Decimal) -> Decimal:
         """
-        Validates that the bet amount is a positive number with exactly 2 decimal places.
-        
+        Проверяет сумму ставки на положительность и наличие ровно 2 знаков после запятой.
+
         Args:
-            value: The bet amount to validate
-            
+            value: Сумма ставки для проверки
+
         Returns:
-            The validated bet amount
-            
+            Проверенная сумма ставки
+
         Raises:
-            ValueError: If amount is not positive or doesn't have exactly 2 decimal places
+            ValueError: Если сумма не положительная или имеет не ровно 2 знака после запятой
         """
-        # Check if amount is positive
         if value <= Decimal('0'):
-            raise ValueError("Bet amount must be a positive number")
-            
-        # Check if amount has exactly 2 decimal places
+            raise ValueError("Сумма ставки должна быть положительной")
+
         decimal_str = str(value)
         if '.' in decimal_str:
             _, decimals = decimal_str.split('.')
             if len(decimals) != 2:
-                raise ValueError("Bet amount must have exactly 2 decimal places")
-                
+                raise ValueError("Сумма ставки должна иметь ровно 2 знака после запятой")
+
         return value
 
 
 class BetResponse(BaseModel):
     """
-    Data Transfer Object (DTO) for bet information in responses.
-    
-    This class represents the outgoing data structure for bet information
-    in API responses. It includes all relevant bet data for client consumption.
-    
+    DTO для информации о ставке в ответах API.
+
     Attributes:
-        bet_id: Unique identifier of the bet
-        event_id: ID of the event this bet is placed on
-        amount: The monetary amount of the bet
-        status: Current status of the bet
-        created_at: Timestamp when the bet was created
+        bet_id: Уникальный идентификатор ставки
+        event_id: ID события, на которое сделана ставка
+        amount: Сумма ставки
+        status: Текущий статус ставки
+        created_at: Время создания ставки
     """
     model_config = ConfigDict(
-        from_attributes=True,  # Allow creation from ORM objects
+        from_attributes=True,
         json_schema_extra={"example": {
             "bet_id": 123,
             "event_id": 456,
@@ -227,9 +210,9 @@ class BetResponse(BaseModel):
             "created_at": "2023-01-01T12:00:00"
         }}
     )
-    
-    bet_id: int = Field(..., description="Unique identifier of the bet")
-    event_id: int = Field(..., description="ID of the event this bet is placed on")
-    amount: Decimal = Field(..., description="Monetary amount of the bet")
-    status: BetStatus = Field(..., description="Current status of the bet")
-    created_at: datetime = Field(..., description="Timestamp when the bet was created")
+
+    bet_id: int = Field(..., description="Уникальный идентификатор ставки")
+    event_id: int = Field(..., description="ID события, на которое сделана ставка")
+    amount: Decimal = Field(..., description="Сумма ставки")
+    status: BetStatus = Field(..., description="Текущий статус ставки")
+    created_at: datetime = Field(..., description="Время создания ставки")

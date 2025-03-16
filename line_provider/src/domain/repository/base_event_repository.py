@@ -9,113 +9,108 @@ class BaseEventRepository(ABC):
     @abstractmethod
     async def get_all(self) -> List[Event]:
         """
-        Get all events regardless of their status or deadline.
+        Получение всех событий.
 
         Returns:
-            List[Event]: List of all events in the repository
+            List[Event]: Список всех событий в репозитории
         """
         raise NotImplementedError
 
     @abstractmethod
     async def get_active_events(self) -> List[Event]:
         """
-        Get all active events (not finished and not expired).
+        Получение активных событий.
         
-        An event is considered active if:
-        1. Its status is NEW
-        2. Its deadline has not passed
+        Событие считается активным, если:
+        1. Статус NEW
+        2. Срок не истек
         
         Returns:
-            List[Event]: List of active events
+            List[Event]: Список активных событий
         """
         raise NotImplementedError
 
     @abstractmethod
     async def get_by_id(self, event_id: int) -> Event:
         """
-        Get event by its ID.
+        Получение события по ID.
 
         Args:
-            event_id: Unique identifier of the event
+            event_id: Идентификатор события
 
         Returns:
-            Event: The event if found
+            Event: Найденное событие
 
         Raises:
-            EventNotFoundError: If event with given ID does not exist
+            EventNotFoundError: Если событие с указанным ID не найдено
         """
         raise NotImplementedError
 
     @abstractmethod
     async def create(self, event: Event) -> Event:
         """
-        Create a new event in the repository.
+        Создание нового события.
 
         Args:
-            event: Event entity to create
+            event: Сущность события для создания
 
         Returns:
-            Event: Created event with any repository-specific fields populated
+            Event: Созданное событие
 
         Raises:
-            EventAlreadyExistsError: If event with the same ID already exists
+            EventAlreadyExistsError: Если событие с таким ID уже существует
         """
         raise NotImplementedError
 
     @abstractmethod
     async def update(self, event: Event) -> Event:
         """
-        Update an existing event in the repository.
+        Обновление существующего события.
 
         Args:
-            event: Event entity with updated data
+            event: Сущность события с обновленными данными
 
         Returns:
-            Event: Updated event
+            Event: Обновленное событие
 
         Raises:
-            EventNotFoundError: If event with given ID does not exist
+            EventNotFoundError: Если событие с указанным ID не найдено
         """
         raise NotImplementedError
 
     @abstractmethod
     async def update_status(self, event_id: int, new_status: EventStatus) -> Event:
         """
-        Update the status of an event.
-
-        This is a specific update method for changing event status, following
-        the principle of having focused repository methods that match domain operations.
+        Обновление статуса события.
 
         Args:
-            event_id: ID of the event to update
-            new_status: New status to set
+            event_id: ID события для обновления
+            new_status: Новый статус
 
         Returns:
-            Event: Updated event
+            Event: Обновленное событие
 
         Raises:
-            EventNotFoundError: If event with given ID does not exist
+            EventNotFoundError: Если событие с указанным ID не найдено
         """
         raise NotImplementedError
 
     @abstractmethod
     async def exists(self, event_id: int) -> bool:
         """
-        Check if an event exists in the repository.
+        Проверка существования события.
 
         Args:
-            event_id: ID of the event to check
+            event_id: ID события для проверки
 
         Returns:
-            bool: True if event exists, False otherwise
+            bool: True если событие существует, False в противном случае
         """
         raise NotImplementedError
 
     @abstractmethod
     async def clear(self) -> None:
         """
-        Remove all events from the repository.
-        
-        This is primarily useful for testing purposes.
+        Удаление всех событий из репозитория.
         """
         raise NotImplementedError

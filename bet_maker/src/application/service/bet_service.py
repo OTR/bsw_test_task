@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from typing import List
 
 from src.domain.entity import Bet, BetRequest, BetResponse, Event
@@ -15,86 +16,90 @@ class BetService:
 
     async def get_all_bets(self) -> List[BetResponse]:
         """
-        Retrieves all bets from the repository.
+        Получение всех ставок.
         
         Returns:
-            A list of BetResponse objects representing all bets
+            Список объектов BetResponse
         """
         bets: List[Bet] = await self.bet_repository.get_all()
         return [BetResponse.model_validate(bet) for bet in bets]
     
     async def get_bet_by_id(self, bet_id: int) -> BetResponse:
         """
-        Retrieves a specific bet by its ID.
+        Получение ставки по ID.
         
         Args:
-            bet_id: The unique identifier of the bet
+            bet_id: Уникальный идентификатор ставки
             
         Returns:
-            A BetResponse object representing the found bet
+            Объект BetResponse для найденной ставки
             
         Raises:
-            BetNotFoundError: If no bet with the given ID exists
+            BetNotFoundError: Если ставка с указанным ID не существует
         """
         bet: Bet = await self.bet_repository.get_by_id(bet_id)
         return BetResponse.model_validate(bet)
     
     async def get_bets_by_event(self, event_id: int) -> List[BetResponse]:
         """
-        Retrieves all bets for a specific event.
+        Получение всех ставок для указанного события.
         
         Args:
-            event_id: The unique identifier of the event
+            event_id: ID события
             
         Returns:
-            A list of BetResponse objects representing all bets for that event
+            Список объектов BetResponse для данного события
         """
         bets: List[Bet] = await self.bet_repository.get_by_event_id(event_id)
         return [BetResponse.model_validate(bet) for bet in bets]
     
     async def get_bets_by_status(self, status: BetStatus) -> List[BetResponse]:
         """
-        Retrieves all bets with a specific status.
+        Получение ставок с определенным статусом.
         
         Args:
-            status: The status to filter by
+            status: Статус для фильтрации
             
         Returns:
-            A list of BetResponse objects representing all bets with that status
+            Список объектов BetResponse с указанным статусом
         """
         bets: List[Bet] = await self.bet_repository.get_by_status(status)
         return [BetResponse.model_validate(bet) for bet in bets]
     
     async def create_bet(self, bet_request: BetRequest) -> BetResponse:
         """
-        Creates a new bet for an event.
+        Создание новой ставки на событие.
         
         Args:
-            bet_request: The bet request containing event ID and amount
+            bet_request: Запрос на создание ставки с ID события и суммой
             
         Returns:
-            A BetResponse object representing the newly created bet
+            Объект BetResponse для созданной ставки
             
         Raises:
-            BetCreationError: If the bet cannot be created due to invalid event or other constraints
+            BetCreationError: Если ставка не может быть создана
         """
-        event_id = bet_request.event_id
-        amount = bet_request.amount
+        event_id: int = bet_request.event_id
+        amount: Decimal = bet_request.amount
         
         try:
             event: Event = await self.event_repository.get_by_id(event_id)
         except EventNotFoundError as e:
-            raise BetCreationError(f"Cannot create bet: {str(e)}")
+            raise BetCreationError(f"Невозможно создать ставку: {str(e)}")
             
         if not event.status.is_active:
-            raise BetCreationError(f"Cannot create bet: Event with ID {event_id} is already finished")
-        
-        current_time = int(datetime.now().timestamp())
+            raise BetCreationError(
+                f"Невозможно создать ставку: Событие с ID {event_id} уже завершено"
+            )
+
+        current_time: int = int(datetime.now().timestamp())
         if event.deadline < current_time:
-            raise BetCreationError(f"Cannot create bet: Event with ID {event_id} deadline has passed")
+            raise BetCreationError(
+                f"Невозможно создать ставку: Срок события с ID {event_id} истек"
+            )
         
-        bet: Bet = Bet(
-            bet_id=0,  # Temporary ID, will be assigned by the repository
+        bet = Bet(
+            bet_id=0,
             event_id=event_id,
             amount=amount,
             status=BetStatus.PENDING,
@@ -103,16 +108,13 @@ class BetService:
         
         created_bet: Bet = await self.bet_repository.create(bet)
         return BetResponse.model_validate(created_bet)
-    
+
     async def update_bets_status(self) -> int:
         """
-        Updates the status of all pending bets based on finished event statuses.
+        Обновление статусов всех ожидающих ставок на основе завершенных событий.
         
-        Args:
-            event: Optional specific event to update bets for. If None, updates all bets.
-            
         Returns:
-            The number of bets that were updated
+            Количество обновленных ставок
         """
         all_events: List[Event] = await self.event_repository.get_all()
         

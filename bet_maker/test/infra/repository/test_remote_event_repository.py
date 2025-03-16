@@ -1,6 +1,3 @@
-"""
-Tests for the RemoteEventRepository implementation.
-"""
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from datetime import datetime
@@ -8,21 +5,19 @@ from decimal import Decimal
 
 from httpx import HTTPStatusError, Response
 
-from src.domain.entity.event import Event
-from src.domain.vo.event_status import EventStatus
+from src.domain.entity import Event
+from src.domain.vo import EventStatus
 from src.infra.http.http_client import HTTPClient
-from src.infra.repository.remote_event_repository import RemoteEventRepository
+from src.infra.repository import RemoteEventRepository
 from src.exception import EventNotFoundError, EventRepositoryConnectionError
 
 pytestmark = pytest.mark.asyncio
 
 
 class TestRemoteEventRepository:
-    """Test suite for the RemoteEventRepository implementation."""
 
     @pytest.fixture
     def mock_http_client(self):
-        """Fixture for creating a mock HTTPClient."""
         client = MagicMock(spec=HTTPClient)
         client.get = AsyncMock()
         client.get_json = AsyncMock()
@@ -32,12 +27,10 @@ class TestRemoteEventRepository:
 
     @pytest.fixture
     def repository(self, mock_http_client):
-        """Fixture for creating a RemoteEventRepository with a mock HTTP client."""
         return RemoteEventRepository(http_client=mock_http_client)
 
     @pytest.fixture
     def sample_events(self):
-        """Fixture providing sample events for testing."""
         now = datetime.now()
         now_timestamp = int(now.timestamp())
         
@@ -63,11 +56,6 @@ class TestRemoteEventRepository:
         ]
 
     async def test_get_all_success(self, repository, mock_http_client, sample_events):
-        """
-        Given: A remote event repository
-        When: Calling get_all and the HTTP client returns events successfully
-        Then: The events should be returned
-        """
         mock_http_client.get_model_list.return_value = sample_events
         
         events = await repository.get_all()
@@ -76,11 +64,6 @@ class TestRemoteEventRepository:
         mock_http_client.get_model_list.assert_called_once_with("/api/v1/events", Event)
 
     async def test_get_all_error(self, repository, mock_http_client):
-        """
-        Given: A remote event repository
-        When: Calling get_all and the HTTP client raises an exception
-        Then: EventRepositoryConnectionError should be raised
-        """
         mock_http_client.get_model_list.side_effect = Exception("Connection error")
         
         with pytest.raises(EventRepositoryConnectionError) as exc_info:
@@ -90,11 +73,6 @@ class TestRemoteEventRepository:
         mock_http_client.get_model_list.assert_called_once()
 
     async def test_get_by_id_success(self, repository, mock_http_client, sample_events):
-        """
-        Given: A remote event repository
-        When: Calling get_by_id with an existing event ID
-        Then: The correct event should be returned
-        """
         mock_http_client.get_model.return_value = sample_events[0]
         
         event = await repository.get_by_id(1)
@@ -103,16 +81,9 @@ class TestRemoteEventRepository:
         mock_http_client.get_model.assert_called_once_with("/api/v1/event/1", Event)
 
     async def test_get_by_id_not_found(self, repository, mock_http_client):
-        """
-        Given: A remote event repository
-        When: Calling get_by_id with a non-existent event ID
-        Then: EventNotFoundError should be raised
-        """
-        # Create a mock response with 404 status
         mock_response = MagicMock(spec=Response)
         mock_response.status_code = 404
         
-        # Create HTTPStatusError with the mock response
         http_error = HTTPStatusError("Event not found", request=MagicMock(), response=mock_response)
         
         mock_http_client.get_model.side_effect = http_error
@@ -124,11 +95,6 @@ class TestRemoteEventRepository:
         mock_http_client.get_model.assert_called_once()
 
     async def test_get_by_id_other_error(self, repository, mock_http_client):
-        """
-        Given: A remote event repository
-        When: Calling get_by_id and an unexpected error occurs
-        Then: EventRepositoryConnectionError should be raised
-        """
         mock_http_client.get_model.side_effect = Exception("Unexpected error")
         
         with pytest.raises(EventRepositoryConnectionError) as exc_info:
@@ -138,16 +104,10 @@ class TestRemoteEventRepository:
         mock_http_client.get_model.assert_called_once()
 
     async def test_get_active_events(self, repository, mock_http_client, sample_events):
-        """
-        Given: A remote event repository with sample events
-        When: Calling get_active_events
-        Then: Only active events should be returned
-        """
         mock_http_client.get_model_list.return_value = sample_events
         
         active_events = await repository.get_active_events()
         
-        # Only events with NEW status and future deadline are active
         now_timestamp = int(datetime.now().timestamp())
         expected_events = [event for event in sample_events 
                            if event.status == EventStatus.NEW and event.deadline > now_timestamp]
@@ -157,11 +117,6 @@ class TestRemoteEventRepository:
         mock_http_client.get_model_list.assert_called_once()
 
     async def test_filter_events_by_status(self, repository, mock_http_client, sample_events):
-        """
-        Given: A remote event repository with sample events
-        When: Filtering events by status
-        Then: Only events with the specified status should be returned
-        """
         mock_http_client.get_model_list.return_value = sample_events
         
         filtered_events = await repository.filter_events(status=EventStatus.NEW)
@@ -173,11 +128,6 @@ class TestRemoteEventRepository:
         mock_http_client.get_model_list.assert_called_once()
 
     async def test_filter_events_by_deadline(self, repository, mock_http_client, sample_events):
-        """
-        Given: A remote event repository with sample events
-        When: Filtering events by deadline
-        Then: Only events matching the deadline criteria should be returned
-        """
         mock_http_client.get_model_list.return_value = sample_events
         now = datetime.now()
         now_timestamp = int(now.timestamp())
@@ -191,11 +141,6 @@ class TestRemoteEventRepository:
         mock_http_client.get_model_list.assert_called_once()
 
     async def test_exists_true(self, repository, mock_http_client, sample_events):
-        """
-        Given: A remote event repository
-        When: Checking if an event exists and it does
-        Then: True should be returned
-        """
         mock_http_client.get_model.return_value = sample_events[0]
         
         exists = await repository.exists(1)
@@ -204,16 +149,9 @@ class TestRemoteEventRepository:
         mock_http_client.get_model.assert_called_once()
 
     async def test_exists_false(self, repository, mock_http_client):
-        """
-        Given: A remote event repository
-        When: Checking if an event exists and it doesn't
-        Then: False should be returned
-        """
-        # Create a mock response with 404 status
         mock_response = MagicMock(spec=Response)
         mock_response.status_code = 404
         
-        # Create HTTPStatusError with the mock response
         http_error = HTTPStatusError("Event not found", request=MagicMock(), response=mock_response)
         
         mock_http_client.get_model.side_effect = http_error

@@ -10,28 +10,28 @@ from src.config import settings
 from src.di.container import get_bet_service, get_bet_repository, get_event_repository
 from src.exception import EventRepositoryConnectionError
 
-# Configure logger
 logger = logging.getLogger(__name__)
+
 
 class EventPoller:
     """
-    Background service for polling events from the line provider.
+    Фоновый сервис для опроса сервиса событий.
     
-    This class implements a proper background task that periodically checks 
-    for event status updates and updates related bets accordingly.
+    Реализует фоновую задачу, которая периодически проверяет обновления статусов 
+    событий и обновляет связанные ставки.
     
     Attributes:
-        bet_service: Service for bet operations
-        poll_interval: Seconds between poll operations
-        is_running: Flag indicating if polling is active
+        bet_service: Сервис для операций со ставками
+        poll_interval: Интервал между опросами в секундах
+        is_running: Флаг, указывающий активен ли опрос
     """
     
     def __init__(self, bet_service: BetService):
         """
-        Initialize the event poller with required services.
+        Инициализация сервиса опроса событий.
         
         Args:
-            bet_service: Service for working with bets
+            bet_service: Сервис для работы со ставками
         """
         self.bet_service = bet_service
         self.poll_interval = settings.EVENT_POLL_INTERVAL
@@ -42,17 +42,17 @@ class EventPoller:
         self._backoff_factor = 2
     
     async def start(self):
-        """Start the polling background task."""
+        """Запуск фоновой задачи опроса."""
         if self.is_running:
-            logger.warning("EventPoller is already running")
+            logger.warning("Сервис опроса событий уже запущен")
             return
         
         self.is_running = True
         self._task = asyncio.create_task(self._poll_loop())
-        logger.info(f"Event polling started with interval: {self.poll_interval}s")
+        logger.info(f"Опрос событий запущен с интервалом: {self.poll_interval} с")
     
     async def stop(self):
-        """Stop the polling background task gracefully."""
+        """Корректная остановка фоновой задачи опроса."""
         if not self.is_running:
             return
             
@@ -64,95 +64,74 @@ class EventPoller:
             except asyncio.CancelledError:
                 pass
             self._task = None
-        logger.info("Event polling stopped")
+        logger.info("Опрос событий остановлен")
     
     async def _poll_loop(self):
-        """Main polling loop that runs until stopped."""
+        """Основной цикл опроса, работающий до остановки."""
         while self.is_running:
             try:
                 await self._do_poll()
-                # Reset consecutive errors counter on success
                 self._consecutive_errors = 0
-                # Use normal interval
                 await asyncio.sleep(self.poll_interval)
             except Exception as e:
-                # Increment consecutive errors counter
                 self._consecutive_errors += 1
                 
-                # Calculate backoff time
                 backoff_time = min(
                     settings.EVENT_POLL_INTERVAL * (self._backoff_factor ** self._consecutive_errors),
-                    300  # Max 5 minutes backoff
+                    300  # Максимальная задержка 5 минут
                 )
                 
-                # Log appropriate message based on error type
                 if isinstance(e, EventRepositoryConnectionError):
                     logger.warning(
-                        f"Line provider service unavailable (attempt {self._consecutive_errors}). "
-                        f"Retrying in {backoff_time:.1f}s: {e}"
+                        f"Сервис событий недоступен (попытка {self._consecutive_errors}). "
+                        f"Повтор через {backoff_time:.1f}с: {e}"
                     )
                 else:
                     logger.exception(
-                        f"Error during event polling (attempt {self._consecutive_errors}). "
-                        f"Retrying in {backoff_time:.1f}s"
+                        f"Ошибка при запросе событий (попытка {self._consecutive_errors}). "
+                        f"Повтор через {backoff_time:.1f}с"
                     )
                 
-                # Use exponential backoff for retries
                 await asyncio.sleep(backoff_time)
     
     async def _do_poll(self):
-        """Perform the actual polling operation."""
+        """Выполнение операции опроса."""
         updated_count = await self.bet_service.update_bets_status()
         if updated_count > 0:
-            logger.info(f"Updated status for {updated_count} bets")
+            logger.info(f"Обновлен статус для {updated_count} ставок")
         else:
-            logger.debug("No bets needed status updates")
+            logger.debug("Нет ставок, требующих обновления статуса")
 
 
-# Singleton instance for the application lifecycle
 _poller_instance = None
 
 
 @asynccontextmanager
 async def lifespan_event_polling():
     """
-    Context manager for event polling lifecycle.
-    
-    This function should be used in the FastAPI lifespan to properly
-    initialize and clean up the polling mechanism.
-    
-    Example:
-        @asynccontextmanager
-        async def lifespan(app: FastAPI):
-            async with lifespan_event_polling():
-                yield
+    Эта функция должна использоваться в lifespan FastAPI.
     """
     global _poller_instance
     
     try:
-        # Create database session and repositories
         from src.infra.database.database import get_db_session
         from src.infra.http import HTTPClient
         
-        # Get required services manually (can't use FastAPI DI here)
         async with get_db_session() as session:
             http_client = HTTPClient(base_url=settings.LINE_PROVIDER_URL)
             bet_repository = get_bet_repository(session)
             event_repository = get_event_repository(http_client)
             
-            # Create bet service
             bet_service = BetService(
                 bet_repository=bet_repository,
                 event_repository=event_repository
             )
             
-            # Create and start poller
             _poller_instance = EventPoller(bet_service)
             await _poller_instance.start()
             
             yield
     finally:
-        # Ensure poller is stopped on application shutdown
         if _poller_instance:
             await _poller_instance.stop()
             _poller_instance = None
@@ -160,21 +139,15 @@ async def lifespan_event_polling():
 
 def get_poller() -> EventPoller:
     """
-    Dependency provider for the EventPoller.
-    
-    Returns:
-        The singleton EventPoller instance
-    
     Raises:
-        RuntimeError: If the poller hasn't been initialized yet
+        RuntimeError: Если сервис опроса еще не инициализирован
     """
     if not _poller_instance:
         raise RuntimeError(
-            "EventPoller not initialized. Make sure to include lifespan_event_polling "
-            "in your FastAPI application lifespan."
+            "Сервис опроса событий не инициализирован. Убедитесь, что lifespan_event_polling "
+            "включен в жизненный цикл приложения FastAPI."
         )
     return _poller_instance
 
 
-# Annotated dependency for injection
-EventPollerDep = Annotated[EventPoller, Depends(get_poller)]
+EventPollerDep = Annotated[EventPoller, Depends(get_poller)]  # TODO: move to container

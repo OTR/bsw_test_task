@@ -13,43 +13,41 @@ class EventService:
 
     async def get_all(self) -> List[Event]:
         """
-        Get all events from the repository.
+        Получение всех событий.
         
         Returns:
-            A list of all Event entities
+            Список всех объектов Event
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the repository
+            EventRepositoryConnectionError: При проблеме соединения с репозиторием
         """
         return await self.repository.get_all()
 
     async def get_active_events(self) -> List[Event]:
         """
-        Get only active events that are available for betting.
-        An event is considered active if it has a status of NEW and
-        its deadline is in the future.
+        Получение активных событий, доступных для ставок.
+        Событие считается активным, если имеет статус NEW и ещё не завершилось.
         
         Returns:
-            A list of active Event entities
+            Список активных объектов Event
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the repository
+            EventRepositoryConnectionError: При проблеме соединения с репозиторием
         """
-        # Leverage the repository's dedicated method for efficiency
         return await self.repository.get_active_events()
     
     async def get_events_by_status(self, status: EventStatus) -> List[Event]:
         """
-        Get events with the specified status.
+        Получение событий с указанным статусом.
         
         Args:
-            status: The status to filter by
+            status: Статус для фильтрации
             
         Returns:
-            A list of Event entities with the specified status
+            Список объектов Event с указанным статусом
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the repository
+            EventRepositoryConnectionError: При проблеме соединения с репозиторием
         """
         return await self.repository.filter_events(status=status)
     
@@ -59,17 +57,17 @@ class EventService:
         after: Optional[datetime] = None
     ) -> List[Event]:
         """
-        Get events with deadlines within a specified time range.
+        Получение событий со сроками в указанном временном диапазоне.
         
         Args:
-            before: If provided, only include events with deadlines before this time
-            after: If provided, only include events with deadlines after this time
+            before: Если указано, включать события со сроками до этого времени
+            after: Если указано, включать события со сроками после этого времени
             
         Returns:
-            A list of Event entities matching the deadline criteria
+            Список объектов Event, соответствующих критериям поиска
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the repository
+            EventRepositoryConnectionError: При проблеме соединения с репозиторием
         """
         return await self.repository.filter_events(
             deadline_before=before,
@@ -78,16 +76,16 @@ class EventService:
     
     async def get_event_by_id(self, event_id: int) -> Event:
         """
-        Get a specific event by its ID.
+        Получение события по его ID.
         
         Args:
-            event_id: The unique identifier of the event
+            event_id: Уникальный идентификатор события
             
         Returns:
-            The Event entity if found
+            Объект Event, если найден
             
         Raises:
-            EventNotFoundError: If the event with the specified ID doesn't exist
-            EventRepositoryConnectionError: If there's an issue connecting to the repository
+            EventNotFoundError: Если событие с указанным ID не существует
+            EventRepositoryConnectionError: При проблеме соединения с репозиторием
         """
         return await self.repository.get_by_id(event_id)

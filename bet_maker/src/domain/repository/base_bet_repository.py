@@ -11,97 +11,97 @@ class BaseBetRepository(ABC):
     @abstractmethod
     async def get_all(self) -> List[Bet]:
         """
-        Retrieves all bets from the repository.
+        Получение всех ставок.
         
         Returns:
-            A list of Bet entities
+            Список сущностей Bet
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the data source
+            BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
     @abstractmethod
     async def get_by_id(self, bet_id: int) -> Bet:
         """
-        Retrieves a specific bet by its ID.
+        Получение ставки по ID.
         
         Args:
-            bet_id: The unique identifier of the bet to retrieve
+            bet_id: Уникальный идентификатор ставки
             
         Returns:
-            The Bet entity if found
+            Сущность Bet, если найдена
             
         Raises:
-            BetNotFoundError: If no bet with the specified ID exists
-            BetRepositoryConnectionError: If there's an issue connecting to the data source
+            BetNotFoundError: Если ставка с указанным ID не найдена
+            BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
     @abstractmethod
     async def get_by_status(self, status: BetStatus) -> List[Bet]:
         """
-        Retrieves all bets with a specific status.
+        Получение ставок с определенным статусом.
         
         Args:
-            status: The status to filter by
+            status: Статус для фильтрации
             
         Returns:
-            A list of Bet entities with the specified status
+            Список ставок с указанным статусом
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the data source
+            BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
 
     @abstractmethod
     async def get_by_event_id(self, event_id: int) -> List[Bet]:
         """
-        Retrieves all bets associated with a specific event.
+        Получение ставок для конкретного события.
         
         Args:
-            event_id: The unique identifier of the event
+            event_id: ID события
             
         Returns:
-            A list of Bet entities associated with the specified event
+            Список ставок для указанного события
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the data source
+            BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
     @abstractmethod
     async def create(self, bet: Bet) -> Bet:
         """
-        Creates a new bet in the repository.
+        Создание новой ставки.
         
         Args:
-            bet: The Bet entity to create
+            bet: Сущность Bet для создания
             
         Returns:
-            The created Bet entity with its assigned ID
+            Созданная сущность Bet с присвоенным ID
             
         Raises:
-            BetCreationError: If the bet couldn't be created
-            BetRepositoryConnectionError: If there's an issue connecting to the data source
+            BetCreationError: Если ставка не может быть создана
+            BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
     @abstractmethod
     async def update_status(self, bet_id: int, new_status: BetStatus) -> Bet:
         """
-        Updates the status of a specific bet.
+        Обновление статуса ставки.
         
         Args:
-            bet_id: The unique integer identifier of the bet to update
-            new_status: The new status to set
+            bet_id: ID ставки для обновления
+            new_status: Новый статус
             
         Returns:
-            The updated Bet entity
+            Обновленная сущность Bet
             
         Raises:
-            BetNotFoundError: If no bet with the specified ID exists
-            BetRepositoryConnectionError: If there's an issue connecting to the data source
+            BetNotFoundError: Если ставка с указанным ID не найдена
+            BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
@@ -114,34 +114,34 @@ class BaseBetRepository(ABC):
         created_before: Optional[datetime] = None,
     ) -> List[Bet]:
         """
-        Retrieves bets that match the specified filters.
+        Получение ставок по фильтрам.
         
         Args:
-            event_id: Filter by event ID (integer), if provided
-            status: Filter by bet status, if provided
-            created_after: Only include bets created after this time, if provided
-            created_before: Only include bets created before this time, if provided
+            event_id: Фильтр по ID события
+            status: Фильтр по статусу ставки
+            created_after: Только ставки, созданные после этого времени
+            created_before: Только ставки, созданные до этого времени
             
         Returns:
-            A list of Bet entities matching the specified filters
+            Список ставок, соответствующих фильтрам
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the data source
+            BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
     @abstractmethod
     async def exists(self, bet_id: int) -> bool:
         """
-        Checks if a bet with the specified ID exists.
+        Проверка существования ставки с указанным ID.
         
         Args:
-            bet_id: The unique identifier of the bet to check
+            bet_id: ID ставки для проверки
             
         Returns:
-            True if a bet with the specified ID exists, False otherwise
+            True если ставка существует, False в противном случае
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the data source
+            BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass

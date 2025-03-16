@@ -1,9 +1,10 @@
+from typing import Any, Dict, Optional
+
 from fastapi import Request, status, FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import ResponseValidationError
-from typing import Any, Dict, Type, Optional
 
-# Import domain exceptions
+
 from src.domain.exceptions import (
     DomainError, 
     EventNotFoundError, 
@@ -12,15 +13,15 @@ from src.domain.exceptions import (
     InvalidBetAmountError
 )
 
-# Import legacy exceptions for backward compatibility
 from src.exception import (
     RemoteServiceUnavailable, 
     EventByIdNotFound, 
     EventRepositoryConnectionError,
 )
 
+
 class ErrorResponse:
-    """Standardized error response format"""
+    """Стандартный формат ответа об ошибке"""
     
     @staticmethod
     def create(
@@ -43,13 +44,12 @@ class ErrorResponse:
         return response
 
 
-# Legacy exception handlers
 
 async def remote_service_unavailable_handler(
     request: Request,
     exc: RemoteServiceUnavailable
 ) -> JSONResponse:
-    """Custom handler when remote service API is unavailable"""
+    """Обработчик недоступности удаленного сервиса"""
     return JSONResponse(
         content=exc.detail,
         status_code=exc.status_code,
@@ -60,7 +60,7 @@ async def event_id_not_found_handler(
     request: Request,
     exc: EventByIdNotFound
 ) -> JSONResponse:
-    """Custom handler when event by ID not found in remote API service"""
+    """Обработчик когда событие не найдено в удаленном API"""
     return JSONResponse(
         content=exc.detail,
         status_code=exc.status_code
@@ -71,20 +71,18 @@ async def event_repository_connection_error_handler(
     request: Request,
     exc: EventRepositoryConnectionError
 ) -> JSONResponse:
-    """Custom handler for event repository connection errors"""
+    """Обработчик ошибок подключения к репозиторию событий"""
     return JSONResponse(
         content=exc.detail,
         status_code=exc.status_code
     )
 
 
-# Domain exception handlers
-
 async def domain_error_handler(
     request: Request,
     exc: DomainError
 ) -> JSONResponse:
-    """Generic handler for all domain errors"""
+    """Общий обработчик доменных ошибок"""
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -99,7 +97,7 @@ async def event_not_found_error_handler(
     request: Request,
     exc: EventNotFoundError
 ) -> JSONResponse:
-    """Custom handler for event not found from repository"""
+    """Обработчик когда событие не найдено в репозитории"""
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -115,7 +113,7 @@ async def bet_service_error_handler(
     request: Request,
     exc: BetServiceError
 ) -> JSONResponse:
-    """Handler for bet service specific errors"""
+    """Обработчик ошибок сервиса ставок"""
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -131,7 +129,7 @@ async def insufficient_balance_error_handler(
     request: Request,
     exc: InsufficientBalanceError
 ) -> JSONResponse:
-    """Handler for insufficient balance errors"""
+    """Обработчик ошибки недостаточного баланса"""
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -151,7 +149,7 @@ async def invalid_bet_amount_error_handler(
     request: Request,
     exc: InvalidBetAmountError
 ) -> JSONResponse:
-    """Handler for invalid bet amount errors"""
+    """Обработчик ошибки недопустимой суммы ставки"""
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -172,8 +170,7 @@ async def response_validation_error_handler(
     exc: ResponseValidationError
 ) -> JSONResponse:
     """
-    Custom handler for response validation errors that often occur when
-    coroutines are not properly awaited in API endpoints
+    Обработчик ошибок валидации ответа
     """
     error_messages = []
     for error in exc.errors():
@@ -187,10 +184,10 @@ async def response_validation_error_handler(
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            message="The server encountered an error while processing the response",
+            message="Сервер столкнулся с ошибкой при обработке ответа",
             error_type="ResponseValidationError",
             details={
-                "info": "A coroutine was likely not awaited properly in the endpoint handler",
+                "info": "Вероятно, корутина не была правильно обработана в обработчике",
                 "validation_errors": error_messages
             }
         ),
@@ -203,20 +200,15 @@ async def catch_all_exception_handler(
     exc: Exception
 ) -> JSONResponse:
     """
-    Catch-all handler for any unhandled exceptions
-    
-    This handler acts as a last resort for exceptions that don't have a specific handler
+    Обработчик всех необработанных исключений
     """
-    # Log the exception here for monitoring and debugging
     error_type = type(exc).__name__
     error_message = str(exc)
     
-    # In production, you might want to hide the actual error details from users
-    # and just return a generic error message
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            message="An unexpected error occurred",
+            message="Произошла непредвиденная ошибка",
             error_type="ServerError",
             details={
                 "error_type": error_type,
@@ -228,27 +220,16 @@ async def catch_all_exception_handler(
 
 
 def register_exception_handlers(app: FastAPI) -> None:
-    """
-    Register all exception handlers for the application.
-    This function should be called during application initialization.
-    
-    Args:
-        app: FastAPI application instance
-    """
-    # Register legacy exception handlers
     app.add_exception_handler(RemoteServiceUnavailable, remote_service_unavailable_handler)
     app.add_exception_handler(EventByIdNotFound, event_id_not_found_handler)
     app.add_exception_handler(EventRepositoryConnectionError, event_repository_connection_error_handler)
     
-    # Register domain exception handlers
     app.add_exception_handler(DomainError, domain_error_handler)
     app.add_exception_handler(EventNotFoundError, event_not_found_error_handler)
     app.add_exception_handler(BetServiceError, bet_service_error_handler)
     app.add_exception_handler(InsufficientBalanceError, insufficient_balance_error_handler)
     app.add_exception_handler(InvalidBetAmountError, invalid_bet_amount_error_handler)
     
-    # Register validation error handlers
     app.add_exception_handler(ResponseValidationError, response_validation_error_handler)
     
-    # Register catch-all handler (always register this last)
     app.add_exception_handler(Exception, catch_all_exception_handler)

@@ -2,8 +2,9 @@ from fastapi import HTTPException, status
 
 from src.exception import BaseBetMakerError
 
+
 class EventByIdNotFound(BaseBetMakerError, HTTPException):
-    """When remote API service couldn't find event by given ID"""
+    """Когда удаленный API сервис не может найти событие по заданному ID"""
 
     def __init__(self, error_type: str, message: str):
         super().__init__(

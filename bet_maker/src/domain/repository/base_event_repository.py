@@ -7,59 +7,47 @@ from src.domain.vo import EventStatus
 
 
 class BaseEventRepository(ABC):
-    """
-    Abstract base class for event repositories following the Repository pattern.
-    
-    This class defines the interface for accessing events regardless of the
-    underlying data source (database, remote API, in-memory, etc.). It follows
-    the Repository pattern from Domain-Driven Design to abstract the data access
-    layer from the domain layer.
-    
-    Any concrete implementation of this repository should handle the specific
-    data source interactions and mapping to/from the domain Event entity.
-    """
     
     @abstractmethod
     async def get_all(self) -> List[Event]:
         """
-        Retrieves all available events from the data source.
+        Получение всех событий.
         
         Returns:
-            A list of Event domain entities
+            Список событий
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the data source
+            EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
     @abstractmethod
     async def get_by_id(self, event_id: int) -> Event:
         """
-        Retrieves a specific event by its unique identifier.
+        Получение события по ID.
         
         Args:
-            event_id: The unique identifier of the event to retrieve
+            event_id: Идентификатор события
             
         Returns:
-            The Event domain entity if found
+            Событие, если найдено
             
         Raises:
-            EventNotFoundError: If the event with the specified ID doesn't exist
-            EventRepositoryConnectionError: If there's an issue connecting to the data source
+            EventNotFoundError: Если событие с указанным ID не найдено
+            EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
     @abstractmethod
     async def get_active_events(self) -> List[Event]:
         """
-        Retrieves all active events from the data source.
-        Active events are those that have not yet started and are accepting bets.
+        Получение активных событий.
         
         Returns:
-            A list of active Event domain entities
+            Список активных событий
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the data source
+            EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
@@ -71,33 +59,33 @@ class BaseEventRepository(ABC):
         deadline_after: Optional[datetime] = None,
     ) -> List[Event]:
         """
-        Retrieves events that match the specified filters.
+        Получение событий по фильтрам.
         
         Args:
-            status: Filter by event status, if provided
-            deadline_before: Only include events with deadlines before this time, if provided
-            deadline_after: Only include events with deadlines after this time, if provided
+            status: Фильтр по статусу
+            deadline_before: Только события с дедлайном до этого времени
+            deadline_after: Только события с дедлайном после этого времени
             
         Returns:
-            A list of Event domain entities matching the filters
+            Список событий, соответствующих фильтрам
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the data source
+            EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass
     
     @abstractmethod
     async def exists(self, event_id: int) -> bool:
         """
-        Checks if an event with the specified ID exists.
+        Проверка существования события.
         
         Args:
-            event_id: The unique identifier of the event to check
+            event_id: ID события для проверки
             
         Returns:
-            True if the event exists, False otherwise
+            True если событие существует, False в противном случае
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the data source
+            EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
         pass

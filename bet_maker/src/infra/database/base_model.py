@@ -4,11 +4,11 @@ from typing import ClassVar
 from sqlalchemy import MetaData
 
 naming_convention = {
-    "ix": "ix_%(column_0_label)s",  # Index
-    "uq": "uq_%(table_name)s_%(column_0_name)s",  # Unique constraint
-    "ck": "ck_%(table_name)s_%(constraint_name)s",  # Check constraint
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",  # Foreign key
-    "pk": "pk_%(table_name)s"  # Primary key
+    "ix": "ix_%(column_0_label)s",  # INDEX
+    "uq": "uq_%(table_name)s_%(column_0_name)s",  # `UNIQUE` constraint
+    "ck": "ck_%(table_name)s_%(constraint_name)s",  # `CHECK` constraint
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",  # FOREIGN KEY
+    "pk": "pk_%(table_name)s"  # PRIMARY KEY
 }
 
 metadata = MetaData(naming_convention=naming_convention)
@@ -19,7 +19,7 @@ class Base(AsyncAttrs, DeclarativeBase):
     @declared_attr.directive
     def __tablename__(cls) -> str:
         """
-        UserProfile' becomes 'user_profile'.
+        Преобразует имя класса в имя таблицы (например, 'UserProfile' в 'user_profile')
         """
         name = cls.__name__
         result = [name[0].lower()]

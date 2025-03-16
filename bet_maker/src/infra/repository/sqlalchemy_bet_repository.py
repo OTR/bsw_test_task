@@ -5,9 +5,9 @@ from sqlalchemy import select, update, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.domain.entity.bet import Bet, BetRequest, BetResponse
-from src.domain.repository.base_bet_repository import BaseBetRepository
-from src.domain.vo.bet_status import BetStatus
+from src.domain.entity import Bet, BetRequest, BetResponse
+from src.domain.repository import BaseBetRepository
+from src.domain.vo import BetStatus
 from src.infra.database.bet_model import BetModel
 from src.exception import (
     BetNotFoundError,
@@ -23,65 +23,62 @@ class SQLAlchemyBetRepository(BaseBetRepository):
 
     async def get_all(self) -> List[Bet]:
         """
-        Retrieves all bets from the database.
+        Получение всех ставок из базы данных.
         
         Returns:
-            A list of Bet domain entities
+            Список доменных сущностей Bet
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
-            # Use the modern select() style with order_by for consistent results
             stmt = select(BetModel).order_by(BetModel.created_at.desc())
             result = await self._session.execute(stmt)
             bet_models = result.scalars().all()
             
             return [self._to_domain_entity(bet_model) for bet_model in bet_models]
         except SQLAlchemyError as e:
-            # Convert SQLAlchemy errors to domain-specific errors
-            raise BetRepositoryConnectionError(f"Failed to retrieve bets: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось получить ставки: {str(e)}")
     
     async def get_by_id(self, bet_id: Union[int, str]) -> Bet:
         """
-        Retrieves a specific bet by its unique identifier.
+        Получение ставки по её уникальному идентификатору.
         
         Args:
-            bet_id: The unique identifier of the bet to retrieve
+            bet_id: Уникальный идентификатор ставки
             
         Returns:
-            The Bet domain entity if found
+            Доменная сущность Bet, если найдена
             
         Raises:
-            BetNotFoundError: If the bet with the specified ID doesn't exist
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetNotFoundError: Если ставка с указанным ID не существует
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
-            # Use scalar_one_or_none for efficient fetching with proper error handling
             stmt = select(BetModel).where(BetModel.bet_id == bet_id)
             result = await self._session.execute(stmt)
             bet_model = result.scalar_one_or_none()
             
             if bet_model is None:
-                raise BetNotFoundError(f"Bet with ID {bet_id} not found")
+                raise BetNotFoundError(f"Ставка с ID {bet_id} не найдена")
             
             return self._to_domain_entity(bet_model)
         except SQLAlchemyError as e:
-            raise BetRepositoryConnectionError(f"Failed to retrieve bet: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось получить ставку: {str(e)}")
     
     async def create(self, bet: Bet) -> Bet:
         """
-        Creates a new bet in the database.
+        Создание новой ставки в базе данных.
         
         Args:
-            bet: The Bet domain entity to create
+            bet: Доменная сущность Bet для создания
             
         Returns:
-            The created Bet domain entity with assigned ID
+            Созданная доменная сущность Bet с присвоенным ID
             
         Raises:
-            BetCreationError: If the bet couldn't be created
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetCreationError: Если ставку не удалось создать
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             bet_model = self._to_db_model(bet)
@@ -93,23 +90,23 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             return self._to_domain_entity(bet_model)
         except SQLAlchemyError as e:
             await self._session.rollback()
-            raise BetCreationError(f"Failed to create bet: {str(e)}")
+            raise BetCreationError(f"Не удалось создать ставку: {str(e)}")
         except Exception as e:
             await self._session.rollback()
-            raise BetRepositoryConnectionError(f"Unexpected error: {str(e)}")
+            raise BetRepositoryConnectionError(f"Непредвиденная ошибка: {str(e)}")
     
     async def get_by_event_id(self, event_id: Union[int, str]) -> List[Bet]:
         """
-        Retrieves all bets associated with a specific event.
+        Получение всех ставок, связанных с определенным событием.
         
         Args:
-            event_id: The unique identifier of the event
+            event_id: Уникальный идентификатор события
             
         Returns:
-            A list of Bet domain entities associated with the event
+            Список доменных сущностей Bet, связанных с событием
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             stmt = select(BetModel).where(BetModel.event_id == str(event_id))
@@ -118,20 +115,20 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             
             return [self._to_domain_entity(bet_model) for bet_model in bet_models]
         except SQLAlchemyError as e:
-            raise BetRepositoryConnectionError(f"Failed to retrieve bets by event ID: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось получить ставки по ID события: {str(e)}")
     
     async def get_by_status(self, status: BetStatus) -> List[Bet]:
         """
-        Retrieves all bets with a specific status.
+        Получение всех ставок с определенным статусом.
         
         Args:
-            status: The status to filter by
+            status: Статус для фильтрации
             
         Returns:
-            A list of Bet domain entities with the specified status
+            Список доменных сущностей Bet с указанным статусом
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             stmt = select(BetModel).where(BetModel.status == status)
@@ -140,27 +137,27 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             
             return [self._to_domain_entity(bet_model) for bet_model in bet_models]
         except SQLAlchemyError as e:
-            raise BetRepositoryConnectionError(f"Failed to retrieve bets by status: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось получить ставки по статусу: {str(e)}")
     
     async def update_status(self, bet_id: Union[int, str], new_status: BetStatus) -> Bet:
         """
-        Updates the status of a specific bet.
+        Обновление статуса конкретной ставки.
         
         Args:
-            bet_id: The unique identifier of the bet to update
-            new_status: The new status to set
+            bet_id: Уникальный идентификатор обновляемой ставки
+            new_status: Новый статус
             
         Returns:
-            The updated Bet domain entity
+            Обновленная доменная сущность Bet
             
         Raises:
-            BetNotFoundError: If the bet with the specified ID doesn't exist
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetNotFoundError: Если ставка с указанным ID не существует
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             exists = await self.exists(bet_id)
             if not exists:
-                raise BetNotFoundError(f"Bet with ID {bet_id} not found")
+                raise BetNotFoundError(f"Ставка с ID {bet_id} не найдена")
             
             stmt = (
                 update(BetModel)
@@ -174,28 +171,28 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             updated_bet = result.scalar_one_or_none()
             
             if updated_bet is None:
-                raise BetNotFoundError(f"Bet with ID {bet_id} not found after update")
+                raise BetNotFoundError(f"Ставка с ID {bet_id} не найдена после обновления")
                 
             await self._session.commit()
                 
             return self._to_domain_entity(updated_bet)
         except SQLAlchemyError as e:
             await self._session.rollback()
-            raise BetRepositoryConnectionError(f"Failed to update bet status: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось обновить статус ставки: {str(e)}")
     
     async def bulk_update_status(self, bet_ids: List[Union[int, str]], new_status: BetStatus) -> int:
         """
-        Updates the status of multiple bets in a single operation.
+        Обновление статуса нескольких ставок за одну операцию.
         
         Args:
-            bet_ids: The unique identifiers of the bets to update
-            new_status: The new status to set
+            bet_ids: Уникальные идентификаторы ставок для обновления
+            new_status: Новый статус
             
         Returns:
-            The number of bets that were updated
+            Количество обновленных ставок
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             stmt = (
@@ -209,7 +206,7 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             return result.rowcount
         except SQLAlchemyError as e:
             await self._session.rollback()
-            raise BetRepositoryConnectionError(f"Failed to update bet statuses: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось обновить статусы ставок: {str(e)}")
     
     async def filter_bets(
         self,
@@ -219,19 +216,19 @@ class SQLAlchemyBetRepository(BaseBetRepository):
         created_before: Optional[datetime] = None,
     ) -> List[Bet]:
         """
-        Retrieves bets that match the specified filters.
+        Получение ставок, соответствующих указанным фильтрам.
         
         Args:
-            event_id: Filter by event ID, if provided
-            status: Filter by bet status, if provided
-            created_after: Only include bets created after this time, if provided
-            created_before: Only include bets created before this time, if provided
+            event_id: Фильтр по ID события
+            status: Фильтр по статусу ставки
+            created_after: Только ставки, созданные после этого времени
+            created_before: Только ставки, созданные до этого времени
             
         Returns:
-            A list of Bet domain entities matching the specified filters
+            Список доменных сущностей Bet, соответствующих фильтрам
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             filters = []
@@ -256,40 +253,40 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             
             return [self._to_domain_entity(bet_model) for bet_model in bet_models]
         except SQLAlchemyError as e:
-            raise BetRepositoryConnectionError(f"Failed to filter bets: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось отфильтровать ставки: {str(e)}")
     
     async def exists(self, bet_id: int) -> bool:
         """
-        Checks if a bet with the specified ID exists.
+        Проверка существования ставки с указанным ID.
         
         Args:
-            bet_id: The unique identifier of the bet to check
+            bet_id: Уникальный идентификатор проверяемой ставки
             
         Returns:
-            True if a bet with the specified ID exists, False otherwise
+            True если ставка существует, False в противном случае
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             stmt = select(BetModel.bet_id).where(BetModel.bet_id == bet_id)
             result = await self._session.execute(stmt)
             return result.scalar_one_or_none() is not None
         except SQLAlchemyError as e:
-            raise BetRepositoryConnectionError(f"Failed to check if bet exists: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось проверить существование ставки: {str(e)}")
     
     async def update_bets(self, bets: List[Bet]) -> List[Bet]:
         """
-        Updates multiple bets in a single operation.
+        Обновление нескольких ставок за одну операцию.
         
         Args:
-            bets: List of bet entities with updated values
+            bets: Список сущностей ставок с обновленными значениями
             
         Returns:
-            List of updated bet entities
+            Список обновленных сущностей ставок
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             updated_bets = []
@@ -313,20 +310,20 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             return updated_bets
         except SQLAlchemyError as e:
             await self._session.rollback()
-            raise BetRepositoryConnectionError(f"Failed to update bets: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось обновить ставки: {str(e)}")
     
     async def save(self, bet_request: BetRequest) -> BetResponse:
         """
-        Save a new bet from a BetRequest DTO.
+        Сохранение новой ставки из BetRequest DTO.
         
         Args:
-            bet_request: The bet request data from the API
+            bet_request: Данные запроса на создание ставки из API
             
         Returns:
-            A BetResponse containing the saved bet data
+            BetResponse с данными сохраненной ставки
             
         Raises:
-            BetCreationError: If the bet couldn't be created
+            BetCreationError: Если ставку не удалось создать
         """
         try:
             new_bet_model = BetModel(
@@ -342,19 +339,19 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             return BetResponse.model_validate(new_bet_model, from_attributes=True)
         except SQLAlchemyError as e:
             await self._session.rollback()
-            raise BetCreationError(f"Failed to save bet: {str(e)}")
+            raise BetCreationError(f"Не удалось сохранить ставку: {str(e)}")
     
     save_bet = save
     
     async def get_pending_bets(self) -> List[BetResponse]:
         """
-        Get all bets with status `PENDING`.
+        Получение всех ставок со статусом `PENDING`.
         
         Returns:
-            List of pending bets
+            Список ожидающих ставок
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             stmt = select(BetModel).where(BetModel.status == BetStatus.PENDING)
@@ -363,20 +360,20 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             
             return [BetResponse.model_validate(bet, from_attributes=True) for bet in pending_bets]
         except SQLAlchemyError as e:
-            raise BetRepositoryConnectionError(f"Failed to get pending bets: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось получить ожидающие ставки: {str(e)}")
     
     async def get_all_bets(self, limit: int = 100) -> List[BetResponse]:
         """
-        Get all bets from database with pagination.
+        Получение всех ставок из базы данных с пагинацией.
         
         Args:
-            limit: Maximum number of bets to return
+            limit: Максимальное количество возвращаемых ставок
             
         Returns:
-            List of bets up to the specified limit
+            Список ставок до указанного лимита
             
         Raises:
-            BetRepositoryConnectionError: If there's an issue connecting to the database
+            BetRepositoryConnectionError: При ошибке подключения к базе данных
         """
         try:
             stmt = select(BetModel).order_by(BetModel.created_at.desc()).limit(limit)
@@ -385,17 +382,17 @@ class SQLAlchemyBetRepository(BaseBetRepository):
             
             return [BetResponse.model_validate(bet, from_attributes=True) for bet in bets]
         except SQLAlchemyError as e:
-            raise BetRepositoryConnectionError(f"Failed to get all bets: {str(e)}")
+            raise BetRepositoryConnectionError(f"Не удалось получить все ставки: {str(e)}")
     
     def _to_domain_entity(self, bet_model: BetModel) -> Bet:
         """
-        Converts a database model to a domain entity.
+        Преобразование модели базы данных в доменную сущность.
         
         Args:
-            bet_model: The database model to convert
+            bet_model: Модель базы данных для преобразования
             
         Returns:
-            The corresponding domain entity
+            Соответствующая доменная сущность
         """
         return Bet(
             bet_id=bet_model.bet_id,
@@ -407,13 +404,13 @@ class SQLAlchemyBetRepository(BaseBetRepository):
     
     def _to_db_model(self, bet: Bet) -> BetModel:
         """
-        Converts a domain entity to a database model.
+        Преобразование доменной сущности в модель базы данных.
         
         Args:
-            bet: The domain entity to convert
+            bet: Доменная сущность для преобразования
             
         Returns:
-            The corresponding database model
+            Соответствующая модель базы данных
         """
         bet_model = BetModel(
             event_id=bet.event_id,

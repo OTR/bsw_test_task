@@ -4,12 +4,12 @@ from typing import Self
 
 class BetStatus(str, Enum):
     """
-    Value object representing the status of a bet
+    Статус ставки
     
     Values:
-        PENDING - Bet is placed but the outcome is not yet determined
-        WON - Bet has won (the corresponding event finished with a win)
-        LOST - Bet has lost (the corresponding event finished with a loss)
+        PENDING - Ставка сделана, но результат еще не определен
+        WON - Ставка выиграла
+        LOST - Ставка проиграла
     """
     PENDING: str = "PENDING"
     WON: str = "WON"
@@ -18,14 +18,14 @@ class BetStatus(str, Enum):
     @classmethod
     def from_event_state(cls, event_state: str) -> Self:
         """
-        Maps an event state to a bet status
+        Преобразует статус события в статус ставки
         
         Args:
-            event_state: The state of the event from line_provider service
+            event_state: Статус события из сервиса line_provider
                          (NEW, FINISHED_WIN, FINISHED_LOSE)
         
         Returns:
-            The corresponding BetStatus
+            Соответствующий статус ставки
         """
         event_status_mapping = {
             "FINISHED_WIN": cls.WON,
@@ -35,10 +35,4 @@ class BetStatus(str, Enum):
         return event_status_mapping.get(event_state, cls.PENDING)
     
     def __str__(self) -> str:
-        """
-        String representation of the bet status
-        
-        Returns:
-            String value of the enum
-        """
         return self.value

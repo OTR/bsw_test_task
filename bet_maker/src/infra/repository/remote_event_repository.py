@@ -15,22 +15,22 @@ class RemoteEventRepository(BaseEventRepository):
     
     def __init__(self, http_client: HTTPClient):
         """
-        Initialize the remote event repository with an HTTP client.
+        Инициализация удаленного репозитория событий.
         
         Args:
-            http_client: The HTTP client to use for making requests to the remote service
+            http_client: HTTP клиент для запросов к удаленному сервису
         """
         self.http_client: HTTPClient = http_client
     
     async def get_all(self) -> List[Event]:
         """
-        Retrieves all available events from the remote line-provider service.
+        Получение всех доступных событий из удаленного сервиса.
         
         Returns:
-            A list of Event domain entities
+            Список доменных сущностей Event
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the remote service
+            EventRepositoryConnectionError: При ошибке подключения к удаленному сервису
         """
         try:
             events: List[Event] = await self.http_client.get_model_list("/api/v1/events", Event)
@@ -40,17 +40,17 @@ class RemoteEventRepository(BaseEventRepository):
     
     async def get_by_id(self, event_id: int) -> Event:
         """
-        Retrieves a specific event by its unique identifier from the remote service.
+        Получение события по его уникальному идентификатору.
         
         Args:
-            event_id: The unique identifier of the event to retrieve
+            event_id: Уникальный идентификатор события
             
         Returns:
-            The Event domain entity if found
+            Доменная сущность Event, если найдена
             
         Raises:
-            EventNotFoundError: If the event with the specified ID doesn't exist
-            EventRepositoryConnectionError: If there's an issue connecting to the remote service
+            EventNotFoundError: Если событие с указанным ID не существует
+            EventRepositoryConnectionError: При ошибке подключения к удаленному сервису
         """
         try:
             event: Event = await self.http_client.get_model(f"/api/v1/event/{event_id}", Event)
@@ -64,14 +64,14 @@ class RemoteEventRepository(BaseEventRepository):
     
     async def get_active_events(self) -> List[Event]:
         """
-        Retrieves all active events from the remote service.
-        Active events are those that have not yet started and are accepting bets.
+        Получение всех активных событий.
+        Активные события - это те, которые еще не начались и принимают ставки.
         
         Returns:
-            A list of active Event domain entities
+            Список активных событий
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the remote service
+            EventRepositoryConnectionError: При ошибке подключения к удаленному сервису
         """
         all_events: List[Event] = await self.get_all()
         return [event for event in all_events if event.is_active]
@@ -83,21 +83,20 @@ class RemoteEventRepository(BaseEventRepository):
         deadline_after: Optional[datetime] = None,
     ) -> List[Event]:
         """
-        Retrieves events that match the specified filters from the remote service.
+        Получение событий, соответствующих указанным фильтрам.
         
         Args:
-            status: Filter by event status, if provided
-            deadline_before: Only include events with deadlines before this time, if provided
-            deadline_after: Only include events with deadlines after this time, if provided
+            status: Фильтр по статусу события
+            deadline_before: Только события с дедлайном до этого времени
+            deadline_after: Только события с дедлайном после этого времени
             
         Returns:
-            A list of Event domain entities matching the filters
+            Список событий, соответствующих фильтрам
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the remote service
+            EventRepositoryConnectionError: При ошибке подключения к удаленному сервису
         """
         all_events: List[Event] = await self.get_all()
-        
         filtered_events: List[Event] = all_events
         
         if status is not None:
@@ -115,16 +114,16 @@ class RemoteEventRepository(BaseEventRepository):
     
     async def exists(self, event_id: int) -> bool:
         """
-        Checks if an event with the specified ID exists in the remote service.
+        Проверка существования события с указанным ID.
         
         Args:
-            event_id: The unique identifier of the event to check
+            event_id: Уникальный идентификатор проверяемого события
             
         Returns:
-            True if the event exists, False otherwise
+            True если событие существует, False в противном случае
             
         Raises:
-            EventRepositoryConnectionError: If there's an issue connecting to the remote service
+            EventRepositoryConnectionError: При ошибке подключения к удаленному сервису
         """
         try:
             await self.get_by_id(event_id)

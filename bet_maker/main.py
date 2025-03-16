@@ -14,36 +14,23 @@ try:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        """
-        Manages the application lifecycle and its resources.
-        
-        This lifespan manager:
-        1. Initializes and cleans up database connections
-        2. Manages the event polling background task
-        """
-        # Initialize database when app starts
         await initialize_database()
-        
-        # Start event polling as a properly managed background task
+
         async with lifespan_event_polling():
-            # Yield control back to FastAPI
             yield
-        
-        # Cleanup resources on app shutdown
+
         await close_database_connection()
 
 
     app = FastAPI(
         title="Bet Maker API",
-        description="Service for placing and managing bets on events",
+        description="Сервис для рамещения ставок на события",
         version="1.0.0",
         lifespan=lifespan
     )
 
-    # Register all exception handlers
     register_exception_handlers(app)
 
-    # Include API routers
     app.include_router(bet_router, prefix="/api/v1")
 
     if __name__ == "__main__":
