@@ -1,35 +1,36 @@
 class LineProviderError(Exception):
-    """Base class for all Line Provider errors"""
+    """Базовый класс для всех ошибок Line Provider"""
 
 
 class EventNotFoundError(LineProviderError):
-    """Raised when an event is not found in the repository"""
+
     def __init__(self, event_id: int):
-        super().__init__(f"Event by `event_id` = {event_id} not found")
+        super().__init__(f"Событие с `event_id` = {event_id} не найдено")
         self.event_id: int = event_id
 
 
 class EventAlreadyExistsError(LineProviderError):
-    """Raised when attempting to create an event that already exists"""
+    """Возникает при попытке создать уже существующее событие"""
+
     def __init__(self, event_id: int):
-        super().__init__(f"Event with `event_id` = {event_id} already exists")
+        super().__init__(f"Событие с `event_id` = {event_id} уже существует")
         self.event_id: int = event_id
 
 
 class InvalidEventDeadlineError(LineProviderError):
     """
-    Raised when event deadline is invalid.
+    Возникает при недействительном сроке события.
     
-    This can happen for two reasons:
-    1. The deadline is not a positive number (≤ 0)
-    2. The deadline is not in the future (≤ current_time)
+    Это может произойти по двум причинам:
+    1. Срок не является положительным числом (<= 0)
+    2. Срок не в будущем (<= текущее время)
     """
     def __init__(self, deadline: int, current_time: int):
         if deadline <= 0:
-            message = f"Event deadline ({deadline}) is invalid. Must be a positive Unix timestamp."
+            message = f"Срок события ({deadline}) недействителен. Должен быть положительным Unix-временем."
         else:
-            message = f"Event deadline ({deadline}) must be in the future. Current time: {current_time}"
-        
+            message = f"Срок события ({deadline}) должен быть в будущем. Текущее время: {current_time}"
+
         self.deadline = deadline
         self.current_time = current_time
         super().__init__(message)

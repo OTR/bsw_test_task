@@ -1,12 +1,13 @@
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Dict, Any, Optional, Union
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
+
+import pytest
 
 from src.domain.entity import Event
-from src.domain.vo import EventStatus
 from src.domain.repository import BaseEventRepository
+from src.domain.vo import EventStatus
 from src.exception import EventNotFoundError
 
 pytestmark = pytest.mark.asyncio
@@ -49,16 +50,16 @@ class MockEventRepository(BaseEventRepository):
             if event.status.is_active and event.deadline > current_time
         ]
 
-    async def filter_events(self, 
-                           status: Optional[EventStatus] = None,
-                           before_deadline: Optional[datetime] = None,
-                           after_deadline: Optional[datetime] = None) -> List[Event]:
-        return await self.filter_events_mock(status, before_deadline, after_deadline)
-
-    async def _filter_events(self, 
+    async def filter_events(self,
                             status: Optional[EventStatus] = None,
                             before_deadline: Optional[datetime] = None,
                             after_deadline: Optional[datetime] = None) -> List[Event]:
+        return await self.filter_events_mock(status, before_deadline, after_deadline)
+
+    async def _filter_events(self,
+                             status: Optional[EventStatus] = None,
+                             before_deadline: Optional[datetime] = None,
+                             after_deadline: Optional[datetime] = None) -> List[Event]:
         result = list(self.events.values())
         if status:
             result = [event for event in result if event.status == status]
@@ -83,30 +84,10 @@ def sample_events():
     future = now + timedelta(days=1)
     past = now - timedelta(days=1)
     return [
-        {
-            "event_id": 1,
-            "coefficient": Decimal("1.50"),
-            "deadline": int(future.timestamp()),
-            "status": EventStatus.NEW
-        },
-        {
-            "event_id": 2,
-            "coefficient": Decimal("2.00"),
-            "deadline": int(past.timestamp()),
-            "status": EventStatus.NEW
-        },
-        {
-            "event_id": 3,
-            "coefficient": Decimal("3.00"),
-            "deadline": int(future.timestamp()),
-            "status": EventStatus.FINISHED_WIN
-        },
-        {
-            "event_id": 4,
-            "coefficient": Decimal("4.00"),
-            "deadline": int(future.timestamp()),
-            "status": EventStatus.FINISHED_LOSE
-        }
+        Event(event_id=1, coefficient=Decimal("1.50"), deadline=int(future.timestamp()), status=EventStatus.NEW),
+        Event(event_id=2, coefficient=Decimal("2.00"), deadline=int(past.timestamp()), status=EventStatus.NEW),
+        Event(event_id=3, coefficient=Decimal("3.00"), deadline=int(future.timestamp()), status=EventStatus.FINISHED_WIN),
+        Event(event_id=4, coefficient=Decimal("4.00"), deadline=int(future.timestamp()), status=EventStatus.FINISHED_LOSE)
     ]
 
 

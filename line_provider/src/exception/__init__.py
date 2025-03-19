@@ -3,7 +3,7 @@ from src.exception.exceptions import (
     EventAlreadyExistsError,
     InvalidEventDeadlineError,
     LineProviderError
-) 
+)
 
 __all__ = (
     "EventNotFoundError",

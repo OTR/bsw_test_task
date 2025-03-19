@@ -93,7 +93,7 @@ class TestEventService:
             status=EventStatus.NEW
         )
         mock_repository.create.side_effect = EventAlreadyExistsError(event_id)
-    
+
         with pytest.raises(EventAlreadyExistsError) as exc_info:
             await event_service.create_event(event)
         assert exc_info.value.event_id == event_id
@@ -130,7 +130,6 @@ class TestEventService:
         assert exc_info.value.event_id == event_id
 
     async def test_finish_event_win(self, event_service, mock_repository, sample_event):
-
         event_id = sample_event.event_id
         unfinished_event = Event(
             event_id=event_id,
@@ -162,7 +161,7 @@ class TestEventService:
             status=EventStatus.NEW
         )
         mock_repository.get_by_id.return_value = unfinished_event
-        
+
         expected_event = Event(
             event_id=event_id,
             coefficient=sample_event.coefficient,
@@ -189,7 +188,7 @@ class TestEventService:
         )
         mock_repository.get_by_id.return_value = finished_event
 
-        with pytest.raises(ValueError, match=f"Event {event_id} is already finished"):
+        with pytest.raises(ValueError, match=f"Событие {event_id} уже завершено"):
             await event_service.finish_event(event_id, first_team_won=True)
         mock_repository.get_by_id.assert_awaited_once_with(event_id)
         mock_repository.update.assert_not_awaited()

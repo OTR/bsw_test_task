@@ -1,11 +1,11 @@
 import time
+from decimal import Decimal
 from typing import List, Dict, Optional
 
-from src.domain.repository import BaseEventRepository
 from src.domain.entity import Event
+from src.domain.repository import BaseEventRepository
 from src.domain.vo import EventStatus
 from src.exception import EventNotFoundError, EventAlreadyExistsError
-from decimal import Decimal
 
 _EVENTS: Dict[int, Event] = {
     1: Event(event_id=1, coefficient=Decimal("1.20"), deadline=int(time.time()) + 600, status=EventStatus.NEW),
@@ -13,46 +13,46 @@ _EVENTS: Dict[int, Event] = {
     3: Event(event_id=3, coefficient=Decimal("1.67"), deadline=int(time.time()) + 90, status=EventStatus.NEW)
 }
 
+
 class InMemoryEventRepository(BaseEventRepository):
 
     def __init__(self, events: Dict[int, Event] = _EVENTS) -> None:
-        """Initialize an empty event repository"""
         self._events: Dict[int, Event] = events
 
     async def get_all(self) -> List[Event]:
         """
-        Get all events regardless of their status or deadline.
+        Получает все события независимо от их статуса или срока.
 
         Returns:
-            List[Event]: List of all events in the repository
+            List[Event]: Список всех событий в репозитории
         """
         return list(self._events.values())
 
     async def get_active_events(self) -> List[Event]:
         """
-        Get all active events (not finished and not expired).
+        Получает все активные события (не завершенные и не просроченные).
         
-        An event is considered active if:
-        1. Its status is NEW
-        2. Its deadline has not passed
+        Событие считается активным, если:
+        1. Его статус - NEW
+        2. Срок еще не истек
         
         Returns:
-            List[Event]: List of active events
+            List[Event]: Список активных событий
         """
         return [event for event in self._events.values() if event.is_active]
 
     async def get_by_id(self, event_id: int) -> Event:
         """
-        Get event by its ID.
+        Получает событие по его ID.
 
         Args:
-            event_id: Unique identifier of the event
+            event_id: Уникальный идентификатор события
 
         Returns:
-            Event: The event if found
+            Event: Событие, если найдено
 
         Raises:
-            EventNotFoundError: If event with given ID does not exist
+            EventNotFoundError: Если событие с указанным ID не существует
         """
         event: Optional[Event] = self._events.get(event_id)
         if not event:
@@ -61,58 +61,58 @@ class InMemoryEventRepository(BaseEventRepository):
 
     async def create(self, event: Event) -> Event:
         """
-        Create a new event in the repository.
+        Создает новое событие в репозитории.
 
         Args:
-            event: Event entity to create
+            event: Сущность события для создания
 
         Returns:
-            Event: Created event with any repository-specific fields populated
+            Event: Созданное событие
 
         Raises:
-            EventAlreadyExistsError: If event with the same ID already exists
+            EventAlreadyExistsError: Если событие с таким же ID уже существует
         """
         if await self.exists(event.event_id):
             raise EventAlreadyExistsError(event.event_id)
-            
+
         self._events[event.event_id] = event
         return event
 
     async def update(self, event: Event) -> Event:
         """
-        Update an existing event in the repository.
+        Обновляет существующее событие в репозитории.
 
         Args:
-            event: Event entity with updated data
+            event: Сущность события с обновленными данными
 
         Returns:
-            Event: Updated event
+            Event: Обновленное событие
 
         Raises:
-            EventNotFoundError: If event with given ID does not exist
+            EventNotFoundError: Если событие с указанным ID не существует
         """
         if not await self.exists(event.event_id):
             raise EventNotFoundError(event.event_id)
-            
+
         self._events[event.event_id] = event
         return event
 
     async def update_status(self, event_id: int, new_status: EventStatus) -> Event:
         """
-        Update the status of an event.
+        Обновляет статус события.
 
-        This is a specific update method for changing event status, following
-        the principle of having focused repository methods that match domain operations.
+        Это специальный метод для изменения статуса события, соответствующий
+        принципу специализированных методов репозитория.
 
         Args:
-            event_id: ID of the event to update
-            new_status: New status to set
+            event_id: ID события для обновления
+            new_status: Новый статус
 
         Returns:
-            Event: Updated event
+            Event: Обновленное событие
 
         Raises:
-            EventNotFoundError: If event with given ID does not exist
+            EventNotFoundError: Если событие с указанным ID не существует
         """
         event: Event = await self.get_by_id(event_id)
         event.status = new_status
@@ -120,20 +120,20 @@ class InMemoryEventRepository(BaseEventRepository):
 
     async def exists(self, event_id: int) -> bool:
         """
-        Check if an event exists in the repository.
+        Проверяет существование события в репозитории.
 
         Args:
-            event_id: ID of the event to check
+            event_id: ID события для проверки
 
         Returns:
-            bool: True if event exists, False otherwise
+            bool: True если событие существует, False в противном случае
         """
         return event_id in self._events
 
     async def clear(self) -> None:
         """
-        Remove all events from the repository.
+        Удаляет все события из репозитория.
         
-        This is primarily useful for testing purposes.
+        В основном полезно для тестирования.
         """
         self._events.clear()

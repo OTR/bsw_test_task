@@ -1,12 +1,13 @@
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Dict, Any, Optional, Union
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock
+
+import pytest
 
 from src.domain.entity import Bet
-from src.domain.vo import BetStatus
 from src.domain.repository import BaseBetRepository
+from src.domain.vo import BetStatus
 from src.exception import BetNotFoundError
 
 pytestmark = pytest.mark.asyncio
@@ -130,34 +131,10 @@ def sample_bets():
     earlier = now - timedelta(hours=1)
     much_earlier = now - timedelta(days=1)
     return [
-        {
-            "bet_id": 1,
-            "event_id": 101,
-            "amount": Decimal("10.00"),
-            "status": BetStatus.PENDING,
-            "created_at": now
-        },
-        {
-            "bet_id": 2,
-            "event_id": 101,
-            "amount": Decimal("20.00"),
-            "status": BetStatus.WON,
-            "created_at": earlier
-        },
-        {
-            "bet_id": 3,
-            "event_id": 102,
-            "amount": Decimal("30.00"),
-            "status": BetStatus.LOST,
-            "created_at": earlier
-        },
-        {
-            "bet_id": 4,
-            "event_id": 103,
-            "amount": Decimal("40.00"),
-            "status": BetStatus.PENDING,
-            "created_at": much_earlier
-        }
+        {"bet_id": 1, "event_id": 101, "amount": Decimal("10.00"), "status": BetStatus.PENDING, "created_at": now},
+        {"bet_id": 2, "event_id": 101, "amount": Decimal("20.00"), "status": BetStatus.WON, "created_at": earlier},
+        {"bet_id": 3, "event_id": 102, "amount": Decimal("30.00"), "status": BetStatus.LOST, "created_at": earlier},
+        {"bet_id": 4, "event_id": 103, "amount": Decimal("40.00"), "status": BetStatus.PENDING, "created_at": much_earlier}
     ]
 
 
@@ -189,7 +166,7 @@ class TestBaseBetRepository:
         next_expected_id = mock_repository.next_id
         now = datetime.now()
         bet_data = {
-            "bet_id": 999,  
+            "bet_id": 999,
             "event_id": 105,
             "amount": Decimal("50.00"),
             "status": BetStatus.PENDING,
@@ -199,8 +176,8 @@ class TestBaseBetRepository:
         initial_count = len(await mock_repository.get_all())
         created_bet = await mock_repository.create(new_bet)
         assert created_bet.bet_id is not None
-        assert created_bet.bet_id != 999  
-        assert created_bet.bet_id == next_expected_id  
+        assert created_bet.bet_id != 999
+        assert created_bet.bet_id == next_expected_id
         assert created_bet.event_id == 105
         assert created_bet.amount == Decimal("50.00")
         assert mock_repository.create_mock.called
@@ -261,8 +238,8 @@ class TestBaseBetRepository:
         one_day_ago = now - timedelta(days=1)
         recent_bets = await mock_repository.filter_bets(created_after=one_hour_ago)
         older_bets = await mock_repository.filter_bets(created_after=one_day_ago, created_before=one_hour_ago)
-        assert len(recent_bets) >= 1  
-        assert len(older_bets) >= 1  
+        assert len(recent_bets) >= 1
+        assert len(older_bets) >= 1
         assert all(bet.created_at > one_hour_ago for bet in recent_bets)
         assert all(one_day_ago < bet.created_at < one_hour_ago for bet in older_bets)
         assert mock_repository.filter_bets_mock.call_count == 2

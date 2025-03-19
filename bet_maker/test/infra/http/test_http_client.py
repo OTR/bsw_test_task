@@ -95,7 +95,7 @@ class TestHTTPClient:
             assert all(event.event_id == 1 for event in events)
 
     async def test_get_model_list_invalid_response(self, http_client, mock_response):
-        mock_response.json.return_value = {"key": "value"}  # Not a list
+        mock_response.json.return_value = {"key": "value"}
         
         with patch("httpx.AsyncClient") as mock_client:
             mock_client.return_value.__aenter__.return_value.get.return_value = mock_response

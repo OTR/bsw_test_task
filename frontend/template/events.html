@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Спортивные события{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4">Спортивные события</h1>
+            <p class="lead">Показаны события со статусом: <span class="badge badge-primary">{{ status }}</span></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <!-- Кнопки фильтрации -->
+            <div class="mb-4">
+                <a href="/events?status=all" class="btn btn-outline-primary {% if status == 'all' %}active{% endif %} mr-2">Все события</a>
+                <a href="/events?status=new" class="btn btn-outline-success {% if status == 'new' %}active{% endif %} mr-2">Новые события</a>
+                <a href="/events?status=finished_win" class="btn btn-outline-info {% if status == 'finished_win' %}active{% endif %} mr-2">Выигрышные события</a>
+                <a href="/events?status=finished_lose" class="btn btn-outline-warning {% if status == 'finished_lose' %}active{% endif %}">Проигрышные события</a>
+            </div>
+
+            <!-- Список событий -->
+            <div class="card-deck" id="events-container">
+                <!-- В реальном приложении здесь будут данные с API -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="card-title">Событие #1</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Футбольный матч</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Команда A против Команды B</p>
+                        <p class="card-text"><small class="text-muted">Коэффициент: 1.5</small></p>
+                        <a href="#" class="btn btn-primary">Сделать ставку</a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        Статус: Активное
+                    </div>
+                </div>
+                
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="card-title">Событие #2</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Баскетбольный матч</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Команда C против Команды D</p>
+                        <p class="card-text"><small class="text-muted">Коэффициент: 2.1</small></p>
+                        <a href="#" class="btn btn-primary">Сделать ставку</a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        Статус: Активное
+                    </div>
+                </div>
+                
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="card-title">Событие #3</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Теннисный матч</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Игрок E против Игрока F</p>
+                        <p class="card-text"><small class="text-muted">Коэффициент: 1.8</small></p>
+                        <a href="#" class="btn btn-primary">Сделать ставку</a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        Статус: Активное
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Пагинация -->
+            <nav aria-label="Навигация по страницам">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Предыдущая</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Следующая</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}

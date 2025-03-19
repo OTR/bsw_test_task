@@ -1,17 +1,17 @@
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import AsyncGenerator, List
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy import event
 
 from src.domain.entity import Bet
 from src.domain.vo import BetStatus
-from src.infra.database.bet_model import BetModel
 from src.infra.database.base_model import Base
+from src.infra.database.bet_model import BetModel
 
 
 # Fixture for in-memory SQLite database

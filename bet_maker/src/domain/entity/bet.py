@@ -1,5 +1,5 @@
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from typing import Union, Any
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
@@ -28,13 +28,13 @@ class Bet(BaseModel):
             "created_at": "2023-01-01T12:00:00"
         }}
     )
-    
-    bet_id: Union[int, str] = Field(..., description="Уникальный идентификатор ставки")
-    event_id: Union[int, str] = Field(..., description="ID события, на которое сделана ставка")
+
+    bet_id: int | None = Field(default=None, description="Уникальный идентификатор ставки")
+    event_id: int = Field(..., description="ID события, на которое сделана ставка")
     amount: Decimal = Field(..., description="Сумма ставки")
     status: BetStatus = Field(default=BetStatus.PENDING, description="Текущий статус ставки")
     created_at: datetime = Field(
-        default_factory=datetime.now, 
+        default_factory=datetime.now,
         description="Время создания ставки"
     )
 
@@ -54,13 +54,13 @@ class Bet(BaseModel):
         """
         if value <= Decimal('0'):
             raise ValueError("Сумма ставки должна быть положительной")
-            
+
         decimal_str = str(value)
         if '.' in decimal_str:
             _, decimals = decimal_str.split('.')
             if len(decimals) != 2:
                 raise ValueError("Сумма ставки должна иметь ровно 2 знака после запятой")
-                
+
         return value
 
     @field_validator('status')
@@ -79,7 +79,7 @@ class Bet(BaseModel):
         """
         if isinstance(value, BetStatus):
             return value
-            
+
         try:
             return BetStatus(value)
         except ValueError:
@@ -94,7 +94,7 @@ class Bet(BaseModel):
             True если ставка разрешена, False если еще в ожидании
         """
         return self.status != BetStatus.PENDING
-    
+
     @property
     def is_winning(self) -> bool:
         """
@@ -104,7 +104,7 @@ class Bet(BaseModel):
             True если ставка выиграла, False в противном случае
         """
         return self.status == BetStatus.WON
-    
+
     @property
     def formatted_amount(self) -> str:
         """
@@ -114,7 +114,7 @@ class Bet(BaseModel):
             Форматированная строка с суммой ставки
         """
         return f"${self.amount}"
-    
+
     def update_status_from_event_state(self, event_state: str) -> 'Bet':
         """
         Создает новый экземпляр Bet с обновленным статусом на основе состояния события.
@@ -155,13 +155,19 @@ class BetRequest(BaseModel):
         event_id: ID события для ставки
         amount: Сумма ставки
     """
+    event_id: int = Field(..., ge=0, description="ID события для ставки")
+    amount: Decimal = Field(..., description="Сумма ставки")
+
     model_config = ConfigDict(
         frozen=True,
-        extra="forbid"
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "event_id": 1,
+                "amount": "10.01"
+            }
+        }
     )
-
-    event_id: int = Field(..., description="ID события для ставки")
-    amount: Decimal = Field(..., description="Сумма ставки")
 
     @field_validator('amount')
     def validate_amount(cls, value: Decimal) -> Decimal:

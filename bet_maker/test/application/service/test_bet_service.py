@@ -1,7 +1,8 @@
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock
+
+import pytest
 
 from src.application.service import BetService
 from src.domain.entity import Bet, BetRequest, BetResponse, Event
@@ -13,13 +14,16 @@ from src.exception import BetCreationError, BetNotFoundError, EventNotFoundError
 def mock_bet_repo():
     return AsyncMock()
 
+
 @pytest.fixture
 def mock_event_repo():
     return AsyncMock()
 
+
 @pytest.fixture
 def bet_service(mock_bet_repo, mock_event_repo):
     return BetService(bet_repository=mock_bet_repo, event_repository=mock_event_repo)
+
 
 @pytest.fixture
 def sample_events():
@@ -33,6 +37,7 @@ def sample_events():
         Event(event_id=4, coefficient=Decimal("4.00"), deadline=int(past.timestamp()), status=EventStatus.FINISHED_LOSE),
     ]
 
+
 @pytest.fixture
 def sample_bets():
     now = datetime.now()
@@ -42,6 +47,7 @@ def sample_bets():
         Bet(bet_id=3, event_id=3, amount=Decimal("30.00"), status=BetStatus.PENDING, created_at=now),
         Bet(bet_id=4, event_id=4, amount=Decimal("40.00"), status=BetStatus.PENDING, created_at=now),
     ]
+
 
 class TestBetService:
     @pytest.mark.asyncio
@@ -135,10 +141,10 @@ class TestBetService:
         mock_event_repo.get_all.return_value = sample_events
         win_event = sample_events[1]
         pending_bets_for_win_event = [b for b in sample_bets if b.event_id == win_event.event_id and b.status == BetStatus.PENDING]
-        
+
         def get_bets_by_event(event_id):
             return pending_bets_for_win_event if event_id == win_event.event_id else []
-        
+
         mock_bet_repo.get_by_event_id.side_effect = get_bets_by_event
         updated_count = await bet_service.update_bets_status()
         assert updated_count == len(pending_bets_for_win_event)

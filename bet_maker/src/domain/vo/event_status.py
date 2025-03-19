@@ -14,7 +14,7 @@ class EventStatus(str, Enum):
     NEW: str = "NEW"
     FINISHED_WIN: str = "FINISHED_WIN"
     FINISHED_LOSE: str = "FINISHED_LOSE"
-    
+
     @classmethod
     def from_string(cls, status_str: str) -> Self:
         """
@@ -34,7 +34,7 @@ class EventStatus(str, Enum):
         except ValueError:
             valid_values = [e.value for e in cls]
             raise ValueError(f"Недопустимый статус события: {status_str}. Допустимые значения: {', '.join(valid_values)}")
-    
+
     @property
     def is_active(self) -> bool:
         """
@@ -44,7 +44,7 @@ class EventStatus(str, Enum):
             True если событие активно (NEW), False в противном случае
         """
         return self == self.NEW
-    
+
     @property
     def is_finished(self) -> bool:
         """
@@ -54,6 +54,6 @@ class EventStatus(str, Enum):
             True если событие завершено (FINISHED_WIN или FINISHED_LOSE), False в противном случае
         """
         return self in (self.FINISHED_WIN, self.FINISHED_LOSE)
-    
+
     def __str__(self) -> str:
         return self.value

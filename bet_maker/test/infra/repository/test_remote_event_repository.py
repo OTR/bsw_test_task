@@ -35,24 +35,9 @@ class TestRemoteEventRepository:
         now_timestamp = int(now.timestamp())
         
         return [
-            Event(
-                event_id=1,
-                coefficient=Decimal("1.50"),
-                deadline=now_timestamp + 86400,  # 1 day from now
-                status=EventStatus.NEW
-            ),
-            Event(
-                event_id=2,
-                coefficient=Decimal("1.75"),
-                deadline=now_timestamp - 86400,  # 1 day ago
-                status=EventStatus.FINISHED_WIN
-            ),
-            Event(
-                event_id=3,
-                coefficient=Decimal("1.25"),
-                deadline=now_timestamp + 172800,  # 2 days from now
-                status=EventStatus.NEW
-            )
+            Event(event_id=1, coefficient=Decimal("1.50"), deadline=now_timestamp + 86400, status=EventStatus.NEW),
+            Event(event_id=2, coefficient=Decimal("1.75"), deadline=now_timestamp - 86400, status=EventStatus.FINISHED_WIN),
+            Event(event_id=3, coefficient=Decimal("1.25"), deadline=now_timestamp + 172800, status=EventStatus.NEW)
         ]
 
     async def test_get_all_success(self, repository, mock_http_client, sample_events):

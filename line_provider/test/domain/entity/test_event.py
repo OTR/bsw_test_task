@@ -8,6 +8,7 @@ from src.domain.entity import Event
 from src.domain.vo import EventStatus
 from src.exception import InvalidEventDeadlineError
 
+
 class TestEvent:
     @pytest.fixture
     def future_timestamp(self):
@@ -53,12 +54,12 @@ class TestEvent:
 
     def test_deadline_validation(self, valid_event_data):
         past_timestamp = int((datetime.now() - timedelta(hours=1)).timestamp())
-        with pytest.raises(InvalidEventDeadlineError, match="must be in the future"):
+        with pytest.raises(InvalidEventDeadlineError, match="должен быть в будущем"):
             valid_event_data["deadline"] = past_timestamp
             Event(**valid_event_data)
 
         current_timestamp = int(datetime.now().timestamp())
-        with pytest.raises(InvalidEventDeadlineError, match="must be in the future"):
+        with pytest.raises(InvalidEventDeadlineError, match="должен быть в будущем"):
             valid_event_data["deadline"] = current_timestamp
             Event(**valid_event_data)
 

@@ -12,105 +12,105 @@ class EventService:
 
     async def get_all_events(self) -> List[Event]:
         """
-        Get all events regardless of their status.
+        Получение всех событий.
 
         Returns:
-            List[Event]: All events in the system
+            List[Event]: Все события
         """
         return await self.repository.get_all()
 
     async def get_active_events(self) -> List[Event]:
         """
-        Get all active events that are available for betting.
+        Получение активных событий для ставок.
         
-        An event is considered active if:
-        1. Its status is NEW (not finished)
-        2. Its deadline has not passed
+        Событие считается активным, если:
+        1. Статус NEW (не завершено)
+        2. Срок не истек
         
         Returns:
-            List[Event]: List of active events
+            List[Event]: Список активных событий
         """
         return await self.repository.get_active_events()
 
     async def get_event(self, event_id: int) -> Event:
         """
-        Get a specific event by its ID.
+        Получение события по его ID.
 
         Args:
-            event_id: Unique identifier of the event
+            event_id: Уникальный идентификатор события
 
         Returns:
-            Event: The requested event
+            Event: Запрошенное событие
 
         Raises:
-            EventNotFoundError: If event with given ID does not exist
+            EventNotFoundError: Если событие с указанным ID не найдено
         """
         return await self.repository.get_by_id(event_id)
 
     async def create_event(self, event: Event) -> Event:
         """
-        Create a new betting event.
+        Создание нового события для ставок.
         
         Args:
-            event: Event to create
+            event: Событие для создания
             
         Returns:
-            Event: Created event
+            Event: Созданное событие
             
         Raises:
-            EventAlreadyExistsError: If event with given ID already exists
-            InvalidEventDeadlineError: If event deadline is not in the future
+            EventAlreadyExistsError: Если событие с указанным ID уже существует
+            InvalidEventDeadlineError: Если срок события не в будущем
         """
-        return await self.repository.create(event)
+        return await self.repository.create(event)  # TODO: implement
 
     async def update_event(self, event: Event) -> Event:
         """
-        Update an existing betting event.
+        Обновление существующего события.
         
         Args:
-            event: Event with updated data
+            event: Событие с обновленными данными
             
         Returns:
-            Event: Updated event
+            Event: Обновленное событие
             
         Raises:
-            EventNotFoundError: If event with given ID does not exist
-            InvalidEventDeadlineError: If event deadline is not in the future
+            EventNotFoundError: Если событие с указанным ID не найдено
+            InvalidEventDeadlineError: Если срок события не в будущем
         """
-        return await self.repository.update(event)
+        return await self.repository.update(event)  # TODO: Implement
 
     async def finish_event(self, event_id: int, first_team_won: bool) -> Event:
         """
-        Mark an event as finished with the specified outcome.
+        Отметить событие как завершенное с указанным результатом.
 
         Args:
-            event_id: ID of the event to finish
-            first_team_won: True if first team won, False if second team won
+            event_id: ID события для завершения
+            first_team_won: True если первая команда выиграла, False если вторая
 
         Returns:
-            Event: Updated event
+            Event: Обновленное событие
 
         Raises:
-            EventNotFoundError: If event with given ID does not exist
-            ValueError: If event is already finished
+            EventNotFoundError: Если событие с указанным ID не найдено
+            ValueError: Если событие уже завершено
         """
         event = await self.repository.get_by_id(event_id)
         if event.is_finished:
-            raise ValueError(f"Event {event_id} is already finished")
+            raise ValueError(f"Событие {event_id} уже завершено")
 
         new_status = EventStatus.FINISHED_WIN if first_team_won else EventStatus.FINISHED_LOSE
         event.status = new_status
-        
-        return await self.repository.update(event)
+
+        return await self.repository.update(event)  # TODO: Implement
 
     async def event_exists(self, event_id: int) -> bool:
         """
-        Check if an event exists.
+        Проверка существования события.
         
         Args:
-            event_id: ID of the event to check
+            event_id: ID проверяемого события
             
         Returns:
-            bool: True if event exists, False otherwise
+            bool: True если событие существует, False в противном случае
         """
         return await self.repository.exists(event_id)

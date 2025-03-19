@@ -3,111 +3,118 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, condecimal, model_validator, field_validator
 
-from src.domain.vo.event_status import EventStatus
+from src.domain.vo import EventStatus
 from src.exception.exceptions import InvalidEventDeadlineError
 
 
 class Event(BaseModel):
     """
-    Representing betting Event
+    Модель события для ставок
     
     Attributes:
-        event_id: Unique identifier for the event (positive integer)
-        coefficient: Betting coefficient (strictly positive number with 2 decimal places)
-        deadline: Timestamp until which bets are accepted
-        status: Current event status (NEW, FINISHED_WIN, FINISHED_LOSE)
+        event_id: Уникальный идентификатор события (положительное целое число)
+        coefficient: Коэффициент ставки (положительное число с 2 знаками после запятой)
+        deadline: Время, до которого принимаются ставки
+        status: Текущий статус события (NEW, FINISHED_WIN, FINISHED_LOSE)
     """
-    event_id: int = Field(ge=0, description="Unique event identifier")
-    coefficient: condecimal(gt=0, decimal_places=2) = Field(description="Betting coefficient")  # type: ignore
-    deadline: int = Field(gt=0, description="Timestamp until which bets are accepted")
-    status: EventStatus = Field(default=EventStatus.NEW, description="Current event status")
+    event_id: int = Field(ge=0, description="Уникальный идентификатор события")
+    coefficient: condecimal(gt=0, decimal_places=2) = Field(description="Коэффициент ставки")  # type: ignore
+    deadline: int = Field(gt=0, description="Время, до которого принимаются ставки")
+    status: EventStatus = Field(default=EventStatus.NEW, description="Текущий статус события")
 
     @model_validator(mode='after')
     def validate_event(self) -> 'Event':
         """
-        Validate event data, specifically:
-        1. Ensure deadline is a positive number
-        2. Ensure deadline is in the future
+        Проверка данных события:
+        1. Срок должен быть положительным числом
+        2. Срок должен быть в будущем
         
         Raises:
-            InvalidEventDeadlineError: When deadline validation fails
+            InvalidEventDeadlineError: При неверном сроке события
         """
         current_time: int = int(datetime.now().timestamp())
-        
-        # Check if deadline is a positive number - this should be caught by Field(gt=0)
-        # but we include it here as a safety check
+
         if self.deadline <= 0:
             raise InvalidEventDeadlineError(
                 deadline=self.deadline,
                 current_time=current_time,
             )
-            
-        # Check if deadline is in the future
+
         if self.deadline <= current_time:
             raise InvalidEventDeadlineError(
                 deadline=self.deadline,
                 current_time=current_time,
             )
-            
+
         return self
 
     @property
     def is_finished(self) -> bool:
-        """Check if Event status is finished"""
+        """Проверка, завершено ли событие"""
         return self.status in (EventStatus.FINISHED_WIN, EventStatus.FINISHED_LOSE)
 
     @property
     def is_active(self) -> bool:
-        """Check if event is active (not finished and deadline not passed)"""
+        """Проверка, активно ли событие (не завершено и срок не истек)"""
         current_time = int(datetime.now().timestamp())
         return not self.is_finished and self.deadline > current_time
 
 
 class CreateEventRequest(BaseModel):
-    """DTO for event creation request."""
-    event_id: int = Field(ge=0, description="Unique event identifier")
-    coefficient: condecimal(gt=0, decimal_places=2) = Field(description="Betting coefficient")  # type: ignore
-    deadline: int = Field(gt=0, description="Timestamp until which bets are accepted")
-    status: EventStatus = Field(default=EventStatus.NEW, description="Current event status")
+    """Запрос на создание события."""
+    event_id: int = Field(ge=0, description="Уникальный идентификатор события")
+    coefficient: condecimal(gt=0, decimal_places=2) = Field(description="Коэффициент ставки")  # type: ignore
+    deadline: int = Field(gt=0, description="Время, до которого принимаются ставки")
+    status: EventStatus = Field(default=EventStatus.NEW, description="Текущий статус события")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "event_id": 1,
+                "coefficient": "1.50",
+                "deadline": 1742709198,
+                "status": "NEW"
+            }
+        }
+    }
 
     @field_validator('coefficient')
     @classmethod
     def validate_coefficient_decimal_places(cls, v: Decimal) -> Decimal:
         """
-        Validate that coefficient has exactly 2 decimal places.
+        Проверка, что коэффициент имеет ровно 2 знака после запятой.
         
         Args:
-            v: Coefficient value
+            v: Значение коэффициента
             
         Returns:
-            Original value if valid
+            Исходное значение, если оно верно
             
         Raises:
-            ValueError: If coefficient doesn't have exactly 2 decimal places
+            ValueError: Если коэффициент не имеет ровно 2 знаков после запятой
         """
-        # Convert to string and split by decimal point
         str_value = str(v)
         if '.' in str_value:
             decimal_places = len(str_value.split('.')[1])
             if decimal_places != 2:
-                raise ValueError(f"Coefficient must have exactly 2 decimal places, got {decimal_places}")
+                raise ValueError(f"Коэффициент должен иметь ровно 2 знака после запятой, получено {decimal_places}")
         else:
-            raise ValueError("Coefficient must have exactly 2 decimal places, got 0")
-        
+            raise ValueError("Коэффициент должен иметь ровно 2 знака после запятой, получено 0")
+
         return v
 
     def to_domain(self) -> Event:
         """
-        Convert DTO to domain model.
+        Преобразование DTO в доменную модель.
         
-        This conversion triggers domain validation rules in the Event class,
-        including deadline validation.
+        Это преобразование запускает правила валидации в классе Event,
+        включая проверку срока.
         
         Returns:
-            Event: Domain entity with validated data
+            Event: Доменная сущность с проверенными данными
             
         Raises:
-            InvalidEventDeadlineError: When deadline validation fails
+            InvalidEventDeadlineError: При неверном сроке события
         """
         return Event(
             event_id=self.event_id,
@@ -118,22 +125,34 @@ class CreateEventRequest(BaseModel):
 
 
 class CreateEventResponse(BaseModel):
-    """Response for event creation."""
-    success: bool = Field(description="Whether the operation was successful")
-    event_id: int = Field(description="ID of the created/updated event")
+    """Ответ на создание события."""
+    success: bool = Field(description="Успешность операции")
+    event_id: int = Field(description="ID созданного/обновленного события")
 
 
 class EventResponse(BaseModel):
-    """DTO for event response."""
-    event_id: int = Field(description="Unique event identifier")
-    coefficient: Decimal = Field(description="Betting coefficient")
-    deadline: int = Field(description="Timestamp until which bets are accepted")
-    status: EventStatus = Field(description="Current event status")
-    is_active: bool = Field(description="Whether the event is active")
+    """Ответ с данными события."""
+    event_id: int = Field(description="Уникальный идентификатор события")
+    coefficient: Decimal = Field(description="Коэффициент ставки")
+    deadline: int = Field(description="Время, до которого принимаются ставки")
+    status: EventStatus = Field(description="Текущий статус события")
+    is_active: bool = Field(description="Активно ли событие")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "event_id": 1,
+                "coefficient": "1.50",
+                "deadline": 1742709198,
+                "status": "NEW",
+                "is_active": True
+            }
+        }
+    }
 
     @classmethod
     def from_domain(cls, event: Event) -> 'EventResponse':
-        """Convert domain model to DTO."""
+        """Преобразование доменной модели в DTO."""
         return cls(
             event_id=event.event_id,
             coefficient=event.coefficient,

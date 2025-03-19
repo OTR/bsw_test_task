@@ -10,30 +10,37 @@ from src.domain.vo import EventStatus
 from src.exception import EventNotFoundError, EventAlreadyExistsError, InvalidEventDeadlineError
 from src.infra.repository import InMemoryEventRepository
 
+pytestmark = pytest.mark.asyncio
+
+
 def create_event(event_id: int, coefficient: Decimal, deadline: int, status: EventStatus = EventStatus.NEW) -> Event:
     return Event.model_construct(event_id=event_id, coefficient=coefficient, deadline=deadline, status=status)
 
-pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def future_timestamp() -> int:
     return int(datetime.now().timestamp()) + 3600
 
+
 @pytest.fixture
 def expired_timestamp() -> int:
     return int(datetime.now().timestamp()) - 3600
+
 
 @pytest.fixture
 def sample_event(future_timestamp: int) -> Event:
     return Event(event_id=1, coefficient=Decimal("1.50"), deadline=future_timestamp, status=EventStatus.NEW)
 
+
 @pytest.fixture
 def repository() -> InMemoryEventRepository:
     return InMemoryEventRepository({})
 
+
 @pytest.fixture
 def base_repository() -> BaseEventRepository:
     return InMemoryEventRepository({})
+
 
 @pytest.fixture
 def populated_repo(repository: InMemoryEventRepository, future_timestamp: int) -> InMemoryEventRepository:
@@ -46,6 +53,7 @@ def populated_repo(repository: InMemoryEventRepository, future_timestamp: int) -
         repository._events[event.event_id] = event
     return repository
 
+
 class TestEventRepoInterface:
     async def test_get_all(self, base_repository: BaseEventRepository, sample_event: Event):
         await base_repository.create(sample_event)
@@ -56,10 +64,10 @@ class TestEventRepoInterface:
     async def test_get_active_events(self, base_repository: BaseEventRepository, sample_event: Event, future_timestamp: int):
         active_event = sample_event
         inactive_event = Event(event_id=2, coefficient=Decimal("1.15"), deadline=future_timestamp, status=EventStatus.FINISHED_WIN)
-        
+
         await base_repository.create(active_event)
         await base_repository.create(inactive_event)
-        
+
         active_events = await base_repository.get_active_events()
         assert len(active_events) == 1
         assert active_events[0] == active_event
@@ -84,7 +92,7 @@ class TestEventRepoInterface:
         await base_repository.create(sample_event)
         updated_event = await base_repository.update_status(sample_event.event_id, EventStatus.FINISHED_WIN)
         assert updated_event.status == EventStatus.FINISHED_WIN
-        
+
         retrieved_event = await base_repository.get_by_id(sample_event.event_id)
         assert retrieved_event.status == EventStatus.FINISHED_WIN
 
@@ -99,9 +107,10 @@ class TestEventRepoInterface:
     async def test_clear(self, base_repository: BaseEventRepository, sample_event: Event):
         await base_repository.create(sample_event)
         assert len(await base_repository.get_all()) == 1
-        
+
         await base_repository.clear()
         assert len(await base_repository.get_all()) == 0
+
 
 class TestInMemoryEventRepo:
     async def test_get_all_empty(self, repository: InMemoryEventRepository):
@@ -118,19 +127,19 @@ class TestInMemoryEventRepo:
     async def test_get_active_events(self, repository: InMemoryEventRepository, future_timestamp: int):
         current_time = future_timestamp - 3600
         expired_deadline = current_time - 60
-        
+
         mock_now = Mock()
         mock_now.timestamp.return_value = current_time
-        
+
         with patch('src.domain.entity.event.datetime') as mock_datetime:
             mock_datetime.now.return_value = mock_now
-            
+
             events = [
                 create_event(1, Decimal("1.20"), future_timestamp, EventStatus.NEW),
                 create_event(2, Decimal("1.15"), future_timestamp, EventStatus.FINISHED_WIN),
                 create_event(3, Decimal("1.67"), expired_deadline, EventStatus.NEW),
             ]
-            
+
             for event in events:
                 repository._events[event.event_id] = event
 

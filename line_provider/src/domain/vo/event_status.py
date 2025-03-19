@@ -3,12 +3,12 @@ from enum import Enum
 
 class EventStatus(str, Enum):
     """
-    Status for betting event
+    Статусы события для ставок
 
     Values:
-        NEW - new event
-        FINISHED_WIN - event finished with win
-        FINISHED_LOSE - event finished with lose
+        NEW - новое событие
+        FINISHED_WIN - событие завершилось победой
+        FINISHED_LOSE - событие завершилось поражением
     """
     NEW: str = "NEW"
     FINISHED_WIN: str = "FINISHED_WIN"

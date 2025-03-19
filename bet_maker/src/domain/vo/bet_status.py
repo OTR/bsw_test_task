@@ -14,7 +14,7 @@ class BetStatus(str, Enum):
     PENDING: str = "PENDING"
     WON: str = "WON"
     LOST: str = "LOST"
-    
+
     @classmethod
     def from_event_state(cls, event_state: str) -> Self:
         """
@@ -31,8 +31,8 @@ class BetStatus(str, Enum):
             "FINISHED_WIN": cls.WON,
             "FINISHED_LOSE": cls.LOST
         }
-        
+
         return event_status_mapping.get(event_state, cls.PENDING)
-    
+
     def __str__(self) -> str:
         return self.value

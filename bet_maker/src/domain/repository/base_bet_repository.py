@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List
 from datetime import datetime
+from typing import Optional, List
 
-from src.domain.entity import Bet 
+from src.domain.entity import Bet
 from src.domain.vo import BetStatus
 
 
 class BaseBetRepository(ABC):
-    
+
     @abstractmethod
-    async def get_all(self) -> List[Bet]:
+    async def get_all(self, limit: int, offset: int, status: str) -> List[Bet]:
         """
         Получение всех ставок.
         
@@ -19,8 +19,7 @@ class BaseBetRepository(ABC):
         Raises:
             BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def get_by_id(self, bet_id: int) -> Bet:
         """
@@ -36,8 +35,7 @@ class BaseBetRepository(ABC):
             BetNotFoundError: Если ставка с указанным ID не найдена
             BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def get_by_status(self, status: BetStatus) -> List[Bet]:
         """
@@ -52,7 +50,6 @@ class BaseBetRepository(ABC):
         Raises:
             BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
 
     @abstractmethod
     async def get_by_event_id(self, event_id: int) -> List[Bet]:
@@ -68,8 +65,7 @@ class BaseBetRepository(ABC):
         Raises:
             BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def create(self, bet: Bet) -> Bet:
         """
@@ -85,8 +81,7 @@ class BaseBetRepository(ABC):
             BetCreationError: Если ставка не может быть создана
             BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def update_status(self, bet_id: int, new_status: BetStatus) -> Bet:
         """
@@ -103,8 +98,7 @@ class BaseBetRepository(ABC):
             BetNotFoundError: Если ставка с указанным ID не найдена
             BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def filter_bets(
         self,
@@ -128,8 +122,7 @@ class BaseBetRepository(ABC):
         Raises:
             BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def exists(self, bet_id: int) -> bool:
         """
@@ -144,4 +137,3 @@ class BaseBetRepository(ABC):
         Raises:
             BetRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass

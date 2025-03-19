@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List
 from datetime import datetime
+from typing import Optional, List
 
 from src.domain.entity import Event
 from src.domain.vo import EventStatus
 
 
 class BaseEventRepository(ABC):
-    
+
     @abstractmethod
     async def get_all(self) -> List[Event]:
         """
@@ -19,8 +19,7 @@ class BaseEventRepository(ABC):
         Raises:
             EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def get_by_id(self, event_id: int) -> Event:
         """
@@ -36,12 +35,15 @@ class BaseEventRepository(ABC):
             EventNotFoundError: Если событие с указанным ID не найдено
             EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
-    async def get_active_events(self) -> List[Event]:
+    async def get_active_events(self, limit: int, offset: int) -> List[Event]:
         """
         Получение активных событий.
+
+        Args:
+            limit: Максимальное количество событий для возврата
+            offset: Количество пропускаемых событий
         
         Returns:
             Список активных событий
@@ -49,8 +51,7 @@ class BaseEventRepository(ABC):
         Raises:
             EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def filter_events(
         self,
@@ -72,8 +73,7 @@ class BaseEventRepository(ABC):
         Raises:
             EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass
-    
+
     @abstractmethod
     async def exists(self, event_id: int) -> bool:
         """
@@ -88,4 +88,3 @@ class BaseEventRepository(ABC):
         Raises:
             EventRepositoryConnectionError: При ошибке подключения к источнику данных
         """
-        pass

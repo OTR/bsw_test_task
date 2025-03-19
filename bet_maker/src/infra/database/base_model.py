@@ -1,7 +1,8 @@
-from sqlalchemy.orm import declared_attr, DeclarativeBase, MappedAsDataclass
-from sqlalchemy.ext.asyncio import AsyncAttrs
 from typing import ClassVar
+
 from sqlalchemy import MetaData
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import declared_attr, DeclarativeBase
 
 naming_convention = {
     "ix": "ix_%(column_0_label)s",  # INDEX
@@ -13,9 +14,10 @@ naming_convention = {
 
 metadata = MetaData(naming_convention=naming_convention)
 
+
 class Base(AsyncAttrs, DeclarativeBase):
     metadata: ClassVar[MetaData] = metadata
-    
+
     @declared_attr.directive
     def __tablename__(cls) -> str:
         """

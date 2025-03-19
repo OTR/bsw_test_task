@@ -1,3 +1,5 @@
+from fastapi import status
+
 from src.exception import BaseBetMakerError
 
 
@@ -16,6 +18,8 @@ class EventRepositoryError(RepositoryError):
 class BetNotFoundError(BetRepositoryError):
     def __init__(self, bet_id: int):
         self.bet_id: int = bet_id
+        self.status_code: int = status.HTTP_404_NOT_FOUND
+        self.detail: str = f"Ставка с ID {bet_id} не найдена"
         super().__init__(f"Ставка с ID {bet_id} не найдена")
 
 
@@ -27,8 +31,14 @@ class BetRepositoryConnectionError(BetRepositoryError):
 
 
 class BetCreationError(BetRepositoryError):
-    def __init__(self, reason: str):
+    def __init__(self, reason: str, **kwargs):
         self.reason: str = reason
+        self.status_code: int = status.HTTP_400_BAD_REQUEST
+        if original_exception := kwargs.get("original_exception"):
+            if isinstance(original_exception, EventNotFoundError):
+                self.status_code: int = status.HTTP_404_NOT_FOUND
+
+        self.detail: str = f"Не удалось создать ставку: {reason}"
         super().__init__(f"Не удалось создать ставку: {reason}")
 
 

@@ -4,6 +4,7 @@ from typing import List
 from src.domain.entity import Event
 from src.domain.vo import EventStatus
 
+
 class BaseEventRepository(ABC):
 
     @abstractmethod
@@ -14,7 +15,6 @@ class BaseEventRepository(ABC):
         Returns:
             List[Event]: Список всех событий в репозитории
         """
-        raise NotImplementedError
 
     @abstractmethod
     async def get_active_events(self) -> List[Event]:
@@ -28,7 +28,6 @@ class BaseEventRepository(ABC):
         Returns:
             List[Event]: Список активных событий
         """
-        raise NotImplementedError
 
     @abstractmethod
     async def get_by_id(self, event_id: int) -> Event:
@@ -44,7 +43,6 @@ class BaseEventRepository(ABC):
         Raises:
             EventNotFoundError: Если событие с указанным ID не найдено
         """
-        raise NotImplementedError
 
     @abstractmethod
     async def create(self, event: Event) -> Event:
@@ -60,7 +58,6 @@ class BaseEventRepository(ABC):
         Raises:
             EventAlreadyExistsError: Если событие с таким ID уже существует
         """
-        raise NotImplementedError
 
     @abstractmethod
     async def update(self, event: Event) -> Event:
@@ -76,7 +73,6 @@ class BaseEventRepository(ABC):
         Raises:
             EventNotFoundError: Если событие с указанным ID не найдено
         """
-        raise NotImplementedError
 
     @abstractmethod
     async def update_status(self, event_id: int, new_status: EventStatus) -> Event:
@@ -93,7 +89,6 @@ class BaseEventRepository(ABC):
         Raises:
             EventNotFoundError: Если событие с указанным ID не найдено
         """
-        raise NotImplementedError
 
     @abstractmethod
     async def exists(self, event_id: int) -> bool:
@@ -106,11 +101,9 @@ class BaseEventRepository(ABC):
         Returns:
             bool: True если событие существует, False в противном случае
         """
-        raise NotImplementedError
 
     @abstractmethod
     async def clear(self) -> None:
         """
         Удаление всех событий из репозитория.
         """
-        raise NotImplementedError

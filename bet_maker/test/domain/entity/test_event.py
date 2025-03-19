@@ -1,7 +1,8 @@
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
+from decimal import Decimal
 from unittest.mock import patch
+
+import pytest
 from pydantic_core import ValidationError
 
 from src.domain.entity import Event

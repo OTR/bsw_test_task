@@ -48,10 +48,10 @@ class TestBetStatus:
 
     def test_classmethod_binding(self):
         assert hasattr(BetStatus, 'from_event_state')
-        
+
         import inspect
         assert isinstance(inspect.getattr_static(BetStatus, 'from_event_state'), classmethod)
-        
+
         result = BetStatus.from_event_state("FINISHED_WIN")
         assert result is BetStatus.WON
         assert isinstance(result, BetStatus)

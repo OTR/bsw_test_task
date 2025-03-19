@@ -1,28 +1,29 @@
 from typing import Any, Dict, Optional
 
 from fastapi import Request, status, FastAPI
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import ResponseValidationError
-
+from fastapi.responses import JSONResponse
 
 from src.domain.exceptions import (
-    DomainError, 
-    EventNotFoundError, 
+    DomainError,
+    EventNotFoundError,
     BetServiceError,
     InsufficientBalanceError,
     InvalidBetAmountError
 )
-
 from src.exception import (
-    RemoteServiceUnavailable, 
-    EventByIdNotFound, 
+    RemoteServiceUnavailable,
+    EventByIdNotFound,
     EventRepositoryConnectionError,
+    BetCreationError,
+    BetNotFoundError,
+    
 )
 
 
 class ErrorResponse:
     """Стандартный формат ответа об ошибке"""
-    
+
     @staticmethod
     def create(
         status_code: int,
@@ -37,10 +38,10 @@ class ErrorResponse:
                 "error_type": error_type
             }
         }
-        
+
         if details:
             response["error"]["details"] = details
-            
+
         return response
 
 
@@ -92,6 +93,33 @@ async def domain_error_handler(
         status_code=status.HTTP_400_BAD_REQUEST
     )
 
+async def bet_creation_error_handler(
+    request: Request,
+    exc: BetCreationError
+) -> JSONResponse:
+    """Обработчик ошибок создания ставки"""
+    return JSONResponse(
+        content=ErrorResponse.create(
+            status_code=exc.status_code,
+            message=str(exc),
+            error_type="BetCreationError"
+        ),
+        status_code=exc.status_code
+    )
+
+async def bet_not_found_error_handler(
+    request: Request,
+    exc: BetNotFoundError
+) -> JSONResponse:
+    """Обработчик когда ставка не найдена в репозитории"""
+    return JSONResponse(
+        content=ErrorResponse.create(
+            status_code=exc.status_code,
+            message=str(exc),
+            error_type="BetNotFoundError"
+        ),
+        status_code=exc.status_code
+    )
 
 async def event_not_found_error_handler(
     request: Request,
@@ -180,7 +208,7 @@ async def response_validation_error_handler(
             "message": error["msg"],
             "input_type": str(type(error.get("input")))
         })
-    
+
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -204,7 +232,7 @@ async def catch_all_exception_handler(
     """
     error_type = type(exc).__name__
     error_message = str(exc)
-    
+
     return JSONResponse(
         content=ErrorResponse.create(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -223,13 +251,15 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(RemoteServiceUnavailable, remote_service_unavailable_handler)
     app.add_exception_handler(EventByIdNotFound, event_id_not_found_handler)
     app.add_exception_handler(EventRepositoryConnectionError, event_repository_connection_error_handler)
-    
+
     app.add_exception_handler(DomainError, domain_error_handler)
     app.add_exception_handler(EventNotFoundError, event_not_found_error_handler)
     app.add_exception_handler(BetServiceError, bet_service_error_handler)
     app.add_exception_handler(InsufficientBalanceError, insufficient_balance_error_handler)
     app.add_exception_handler(InvalidBetAmountError, invalid_bet_amount_error_handler)
-    
+
     app.add_exception_handler(ResponseValidationError, response_validation_error_handler)
-    
+
+    app.add_exception_handler(BetCreationError, bet_creation_error_handler)
+    app.add_exception_handler(BetNotFoundError, bet_not_found_error_handler)
     app.add_exception_handler(Exception, catch_all_exception_handler)

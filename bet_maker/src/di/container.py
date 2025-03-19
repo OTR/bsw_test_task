@@ -1,6 +1,6 @@
-from typing import Annotated, AsyncGenerator, Callable, Dict, Type, TypeVar, cast
 import logging
 from functools import lru_cache
+from typing import Annotated, AsyncGenerator, Callable, Dict, Type, TypeVar, cast
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -111,7 +111,7 @@ class DependencyRegistry:
     """
     Service locator pattern
     """
-    
+
     _registry: Dict[Type, Callable] = {
         HTTPClient: get_http_client,
         BaseBetRepository: get_bet_repository,
@@ -119,7 +119,7 @@ class DependencyRegistry:
         BetService: get_bet_service,
         EventService: get_event_service
     }
-    
+
     @classmethod
     def register(cls, interface_type: Type[T], provider: Callable[..., T]) -> None:
         """
@@ -130,7 +130,7 @@ class DependencyRegistry:
             provider: Функция, предоставляющая экземпляры типа
         """
         cls._registry[interface_type] = provider
-        
+
     @classmethod
     def get_provider(cls, interface_type: Type[T]) -> Callable[..., T]:
         """
@@ -147,9 +147,9 @@ class DependencyRegistry:
         """
         if interface_type not in cls._registry:
             raise KeyError(f"Нет зарегистрированного поставщика для {interface_type.__name__}")
-            
+
         return cast(Callable[..., T], cls._registry[interface_type])
-    
+
     @classmethod
     def get_dependency(cls, interface_type: Type[T]) -> Annotated[T, Depends]:
         """
@@ -186,7 +186,7 @@ def get_dependency(
         RuntimeError: Если зависимость не найдена
     """
     provider = DependencyRegistry.get_provider(dependency_type)
-    
+
     try:
         return request.scope["fastapi_deps"].get(provider)
     except (KeyError, AttributeError):

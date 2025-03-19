@@ -1,8 +1,8 @@
 from typing import Any, Dict, Optional, TypeVar, Type, List
-from pydantic import BaseModel
 
 import httpx
 from httpx import Response
+from pydantic import BaseModel
 
 from src.exception import RemoteServiceUnavailable
 
@@ -21,7 +21,7 @@ class HTTPClient:
         """
         self.base_url: str = base_url
         self.timeout: float = timeout
-    
+
     async def get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Response:
         """
         Выполнение GET-запроса по указанному пути.
@@ -39,7 +39,7 @@ class HTTPClient:
         base = str(self.base_url).rstrip('/')
         normalized_path = '/' + path.lstrip('/')
         url: str = f"{base}{normalized_path}"
-        
+
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response: Response = await client.get(url, params=params)
@@ -69,7 +69,7 @@ class HTTPClient:
         """
         response: Response = await self.get(path, params)
         return response.json()
-    
+
     async def get_model(
         self,
         path: str,
@@ -114,8 +114,8 @@ class HTTPClient:
         """
         response: Response = await self.get(path, params)
         data: Any = response.json()
-        
+
         if not isinstance(data, list):
             raise ValueError(f"Ожидался ответ в виде списка, но получен {type(data)}")
-            
+
         return [model_class.model_validate(item) for item in data]

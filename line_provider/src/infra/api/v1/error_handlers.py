@@ -15,15 +15,15 @@ from src.exception import (
 
 def create_error_response(status_code: int, message: str, error_type: str) -> Dict[str, Any]:
     """
-    Create a standardized error response dictionary.
+    Создает стандартный словарь ответа об ошибке.
     
     Args:
-        status_code: HTTP status code
-        message: Error message
-        error_type: Type of error (class name)
+        status_code: HTTP код статуса
+        message: Сообщение об ошибке
+        error_type: Тип ошибки (имя класса)
         
     Returns:
-        Dictionary with error details
+        Словарь с деталями ошибки
     """
     return {
         "error": {
@@ -39,16 +39,14 @@ async def validation_error_handler(
     exc: ValidationError
 ) -> JSONResponse:
     """
-    Handle Pydantic validation errors.
-    This handler will catch domain exceptions raised during validation.
+    Обрабатывает ошибки валидации Pydantic.
+    Перехватывает доменные исключения во время валидации.
     """
-    # Extract the original error if it's wrapped in ValidationError
     if exc.raw_errors:
         for error in exc.raw_errors:
             if hasattr(error, 'exc'):
                 original_error = error.exc
                 if isinstance(original_error, LineProviderError):
-                    # Route to the appropriate domain exception handler
                     if isinstance(original_error, InvalidEventDeadlineError):
                         return await invalid_event_deadline_handler(request, original_error)
                     if isinstance(original_error, EventNotFoundError):
@@ -58,8 +56,7 @@ async def validation_error_handler(
                     return await line_provider_error_handler(request, original_error)
             elif isinstance(error, InvalidEventDeadlineError):
                 return await invalid_event_deadline_handler(request, error)
-    
-    # Handle regular validation errors
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=create_error_response(
@@ -75,25 +72,19 @@ async def request_validation_error_handler(
     exc: RequestValidationError
 ) -> JSONResponse:
     """
-    Handle FastAPI request validation errors.
+    Обрабатывает ошибки валидации запросов FastAPI.
     
-    This catches validation errors from the API layer before they reach
-    the domain models. For deadline validation that happens in the domain
-    models, see validation_error_handler.
+    Перехватывает ошибки валидации на уровне API до их попадания в доменные модели.
     """
-    # Check if this contains an embedded InvalidEventDeadlineError
-    # This can happen if the request validation triggers a domain validation
     if hasattr(exc, 'raw_errors'):
         for error in exc.raw_errors:
             if hasattr(error, 'exc') and isinstance(error.exc, LineProviderError):
                 original_error = error.exc
-                # Route to appropriate domain exception handler
                 if isinstance(original_error, InvalidEventDeadlineError):
                     return await invalid_event_deadline_handler(request, original_error)
-                # Other domain exceptions can be handled similarly
 
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,  # Use 400 instead of 422 for API validation errors
+        status_code=status.HTTP_400_BAD_REQUEST,
         content=create_error_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=str(exc),
@@ -106,7 +97,7 @@ async def event_not_found_handler(
     request: Request,
     exc: EventNotFoundError
 ) -> JSONResponse:
-    """Handle EventNotFoundError exceptions."""
+    """Обрабатывает исключения о ненайденных событиях."""
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
         content=create_error_response(
@@ -121,7 +112,7 @@ async def event_already_exists_handler(
     request: Request,
     exc: EventAlreadyExistsError
 ) -> JSONResponse:
-    """Handle EventAlreadyExistsError exceptions."""
+    """Обрабатывает исключения о существующих событиях."""
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
         content=create_error_response(
@@ -137,10 +128,9 @@ async def invalid_event_deadline_handler(
     exc: InvalidEventDeadlineError
 ) -> JSONResponse:
     """
-    Handle InvalidEventDeadlineError exceptions.
+    Обрабатывает исключения о неверных сроках событий.
     
-    This handles validation errors related to event deadlines,
-    which can be either negative/zero or not in the future.
+    Обрабатывает ошибки валидации сроков событий, которые могут быть отрицательными или не в будущем.
     """
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -157,8 +147,8 @@ async def line_provider_error_handler(
     exc: LineProviderError
 ) -> JSONResponse:
     """
-    Handle any unhandled LineProviderError exceptions.
-    This is a catch-all handler for domain exceptions that don't have specific handlers.
+    Обрабатывает необработанные исключения LineProviderError.
+    Это общий обработчик для доменных исключений без специальных обработчиков.
     """
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -170,7 +160,6 @@ async def line_provider_error_handler(
     )
 
 
-# Map of exception types to their handlers
 exception_handlers = {
     ValidationError: validation_error_handler,
     RequestValidationError: request_validation_error_handler,
@@ -183,10 +172,10 @@ exception_handlers = {
 
 def register_error_handlers(app: FastAPI) -> None:
     """
-    Register all error handlers with the FastAPI application.
+    Регистрирует все обработчики ошибок в приложении FastAPI.
     
     Args:
-        app: FastAPI application instance
+        app: Экземпляр приложения FastAPI
     """
     for exception_class, handler in exception_handlers.items():
         app.add_exception_handler(exception_class, handler)

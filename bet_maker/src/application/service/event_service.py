@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 
-from src.domain.repository import BaseEventRepository
 from src.domain.entity import Event
+from src.domain.repository import BaseEventRepository
 from src.domain.vo import EventStatus
 
 
@@ -23,7 +23,7 @@ class EventService:
         """
         return await self.repository.get_all()
 
-    async def get_active_events(self) -> List[Event]:
+    async def get_active_events(self, limit: int, offset: int) -> List[Event]:
         """
         Получение активных событий, доступных для ставок.
         Событие считается активным, если имеет статус NEW и ещё не завершилось.
@@ -34,8 +34,8 @@ class EventService:
         Raises:
             EventRepositoryConnectionError: При проблеме соединения с репозиторием
         """
-        return await self.repository.get_active_events()
-    
+        return await self.repository.get_active_events(limit=limit, offset=offset)
+
     async def get_events_by_status(self, status: EventStatus) -> List[Event]:
         """
         Получение событий с указанным статусом.
@@ -50,10 +50,10 @@ class EventService:
             EventRepositoryConnectionError: При проблеме соединения с репозиторием
         """
         return await self.repository.filter_events(status=status)
-    
+
     async def get_events_by_deadline(
-        self, 
-        before: Optional[datetime] = None, 
+        self,
+        before: Optional[datetime] = None,
         after: Optional[datetime] = None
     ) -> List[Event]:
         """
@@ -73,7 +73,7 @@ class EventService:
             deadline_before=before,
             deadline_after=after
         )
-    
+
     async def get_event_by_id(self, event_id: int) -> Event:
         """
         Получение события по его ID.

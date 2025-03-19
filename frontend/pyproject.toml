@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "frontend"
+version = "0.1.0"
+description = ""
+authors = ["OTR <49165533+OTR@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = {extras = ["standard"], version = "^0.115.8"}
+uvicorn = "^0.34.0"
+jinja2 = "^3.1.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

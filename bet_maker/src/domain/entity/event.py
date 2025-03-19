@@ -9,20 +9,19 @@ from src.domain.vo import EventStatus
 
 class Event(BaseModel):
     """
-    Domain entity representing a betting event.
+    Доменная сущность, представляющая событие для ставок.
     
-    This entity is a representation of an event from the line-provider service
-    within the bet-maker domain context. It contains all relevant information
-    about an event that can be bet on.
+    Представляет событие из сервиса line-provider в контексте домена bet-maker.
+    Содержит всю необходимую информацию о событии, на которое можно сделать ставку.
     
     Attributes:
-        event_id: Unique identifier of the event
-        coefficient: The betting coefficient (odds) for this event
-        deadline: Unix timestamp indicating the deadline for placing bets
-        status: Current status of the event
+        event_id: Уникальный идентификатор события
+        coefficient: Коэффициент ставки для этого события
+        deadline: Unix-время дедлайна для размещения ставок
+        status: Текущий статус события
     """
     model_config: ClassVar[ConfigDict] = ConfigDict(
-        frozen=True,  # Make the entity immutable
+        frozen=True,
         json_schema_extra={"example": {
             "event_id": 123,
             "coefficient": "2.50",
@@ -30,97 +29,92 @@ class Event(BaseModel):
             "status": "NEW"
         }}
     )
-    
-    event_id: Union[int, str] = Field(..., description="Unique identifier of the event")
-    coefficient: Decimal = Field(..., description="Betting coefficient with exactly 2 decimal places")
-    deadline: int = Field(..., description="Unix timestamp deadline for placing bets")
-    status: EventStatus = Field(..., description="Current status of the event")
+
+    event_id: Union[int, str] = Field(..., description="Уникальный идентификатор события")
+    coefficient: Decimal = Field(..., description="Коэффициент ставки с ровно 2 знаками после запятой")
+    deadline: int = Field(..., description="Unix-время дедлайна для размещения ставок")
+    status: EventStatus = Field(..., description="Текущий статус события")
 
     @field_validator('coefficient')
     def validate_coefficient(cls, value: Decimal) -> Decimal:
         """
-        Validates that the coefficient is a positive number with exactly 2 decimal places.
+        Проверяет, что коэффициент положительный и имеет ровно 2 знака после запятой.
         
         Args:
-            value: The coefficient value to validate
+            value: Значение коэффициента для проверки
             
         Returns:
-            The validated coefficient
+            Проверенный коэффициент
             
         Raises:
-            ValueError: If coefficient is not positive or doesn't have exactly 2 decimal places
+            ValueError: Если коэффициент не положительный или не имеет ровно 2 знаков после запятой
         """
-        # Check if coefficient is positive
         if value <= Decimal('0'):
-            raise ValueError("Coefficient must be a positive number")
-            
-        # Check if coefficient has exactly 2 decimal places
-        decimal_str: str = str(value)
+            raise ValueError("Коэффициент должен быть положительным числом")
+
+        decimal_str = str(value)
         if '.' in decimal_str:
             _, decimals = decimal_str.split('.')
             if len(decimals) != 2:
-                raise ValueError("Coefficient must have exactly 2 decimal places")
-                
+                raise ValueError("Коэффициент должен иметь ровно 2 знака после запятой")
+
         return value
 
     @field_validator('status')
     def validate_status(cls, value: Any) -> EventStatus:
         """
-        Validates and converts the status to an EventStatus enum.
+        Проверяет и преобразует статус в перечисление EventStatus.
         
         Args:
-            value: The status value to validate (string or EventStatus)
+            value: Значение статуса для проверки (строка или EventStatus)
             
         Returns:
-            The validated EventStatus enum value
+            Проверенное значение перечисления EventStatus
             
         Raises:
-            ValueError: If the status is not valid
+            ValueError: Если статус недействителен
         """
         if isinstance(value, EventStatus):
             return value
-            
+
         return EventStatus.from_string(value)
 
     @property
     def is_active(self) -> bool:
         """
-        Determines if the event is still active for betting.
-        An event is active if its deadline is in the future and its status is 'NEW'.
+        Определяет, активно ли событие для ставок.
+        Событие активно, если его дедлайн в будущем и статус 'NEW'.
         
         Returns:
-            True if the event is active, False otherwise
+            True если событие активно, False в противном случае
         """
         current_time: int = int(datetime.now().timestamp())
         return self.deadline > current_time and self.status.is_active
-    
+
     @property
     def formatted_deadline(self) -> str:
         """
-        Returns the deadline formatted as a human-readable date and time string.
+        Возвращает дедлайн в удобочитаемом формате даты и времени.
         
         Returns:
-            A string representation of the deadline timestamp
+            Строковое представление временной метки дедлайна
         """
         return datetime.fromtimestamp(self.deadline).strftime("%Y-%m-%d %H:%M:%S")
-    
+
     def model_dump_json(self, **kwargs) -> str:
         """
-        Custom JSON serialization method to properly handle Decimal and enum types.
+        Пользовательский метод сериализации JSON для корректной обработки типов Decimal и enum.
         
         Returns:
-            JSON string representation of the model
+            JSON-строка, представляющая модель
         """
-        # First convert the model to a dict
         data: Dict[str, Any] = self.model_dump()
-        
-        # Manually convert Decimal and Enum values to strings
+
         for key, value in data.items():
             if isinstance(value, Decimal):
                 data[key] = str(value)
             elif isinstance(value, EventStatus):
                 data[key] = str(value)
-        
-        # Use json.dumps with custom handling for serialization
+
         from json import dumps
         return dumps(data, default=str)
